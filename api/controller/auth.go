@@ -55,9 +55,23 @@ func (c *Auth) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	token, err := getJWT(c.signingKey, user)
+	if err != nil {
+		handleError(err, w, http.StatusBadRequest, "error in creating security token")
+	}
+
+	loginResponse := model.LoginResponse{
+		UserID: user.ID,
+		Email:  user.Email,
+		Name:   user.Name,
+		Token:  token,
+	}
+	w.WriteHeader(201)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	json.NewEncoder(w).Encode(user)
+	err = json.NewEncoder(w).Encode(loginResponse)
+	if err != nil {
+		log.Printf("Error: %v", err)
+	}
 }
 
 func (c *Auth) Login(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +84,7 @@ func (c *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if credential.Email == "" || credential.Password == "" {
-		handleError(err, w, http.StatusBadRequest, "Empty values in Signup request")
+		handleError(err, w, http.StatusBadRequest, "Empty values in login request")
 		return
 	}
 
@@ -97,6 +111,7 @@ func (c *Auth) Login(w http.ResponseWriter, r *http.Request) {
 	loginResponse := model.LoginResponse{
 		UserID: user.ID,
 		Email:  user.Email,
+		Name:   user.Name,
 		Token:  token,
 	}
 	w.WriteHeader(200)

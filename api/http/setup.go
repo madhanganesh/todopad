@@ -11,6 +11,7 @@ import (
 	"github.com/madhanganesh/todopad/api/controller"
 	"github.com/madhanganesh/todopad/api/model"
 	"github.com/madhanganesh/todopad/api/repository"
+	"github.com/rs/cors"
 )
 
 func NewServer(appConfig *config.App) http.Server {
@@ -23,6 +24,7 @@ func NewServer(appConfig *config.App) http.Server {
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+	router.Use(cors.Default().Handler)
 
 	router.Post("/signup", authController.SignUpUser)
 	router.Post("/login", authController.Login)
