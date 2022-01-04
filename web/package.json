@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "rimraf ../api/public",
     "build": "rollup -c",
+    "postbuild": "cp -a ./public/. ../api/public",
     "dev": "rollup -c -w",
     "start": "sirv public --no-clear"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
+    "@rollup/plugin-replace": "^3.0.1",
+    "rimraf": "^3.0.2",
     "rollup": "^2.3.4",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",

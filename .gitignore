@@ -1,2 +1,4 @@
 .DS_Store
 *.sqlite
+node_modules/
+web/public/build/

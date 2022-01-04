@@ -1,3 +1,9 @@
+let baseURL = "";
+
+if (process.env.NODE_ENV !== "production") {
+  baseURL = "http://127.0.0.1:8080";
+}
+
 export async function signupAPI(name, email, password) {
   const payload = {
     method: "POST",
@@ -5,7 +11,7 @@ export async function signupAPI(name, email, password) {
     headers: { "Content-Type": "application/json" },
   };
 
-  const res = await fetch("http://127.0.0.1:8080/signup", payload);
+  const res = await fetch(`${baseURL}/signup`, payload);
   if (!res.ok) {
     const text = await res.text();
     console.log(text);
@@ -26,7 +32,7 @@ export async function loginAPI(email, password) {
     headers: { "Content-Type": "application/json" },
   };
 
-  const res = await fetch("http://127.0.0.1:8080/login", payload);
+  const res = await fetch(`${baseURL}/login`, payload);
   if (!res.ok) {
     const text = await res.text();
     console.log(text);
