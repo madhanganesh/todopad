@@ -1,42 +1,16 @@
 package repository
 
 import (
-	"database/sql"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/pressly/goose"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/madhanganesh/todopad/api/model"
 )
 
-var db *sql.DB
-
-func init() {
-	var err error
-	db, err = sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		panic(err)
-	}
-
-	goose.SetDialect("sqlite3")
-	if err := goose.Up(db, "./../_db/migrations"); err != nil {
-		panic(err)
-	}
-}
-
-func setupDB(t *testing.T) {
-	t.Helper()
-
-	_, err := db.Exec(`delete from users`)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestCreateUser(t *testing.T) {
-	setupDB(t)
+	db := setupdb(t)
 
 	userRepo := NewUserRepository(db)
 	user := model.User{Name: "Madhan Ganesh", Email: "test@test.com", Password: "password"}
@@ -46,7 +20,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestAddingExistingEmail(t *testing.T) {
-	setupDB(t)
+	db := setupdb(t)
 
 	userRepo := NewUserRepository(db)
 	user := model.User{Name: "Madhan Ganesh", Email: "test@test.com", Password: "password"}
@@ -58,7 +32,7 @@ func TestAddingExistingEmail(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	setupDB(t)
+	db := setupdb(t)
 
 	userRepo := NewUserRepository(db)
 	user := model.User{Name: "Madhan Ganesh", Email: "test@test.com", Password: "password"}
@@ -70,7 +44,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestGetUserForNotExists(t *testing.T) {
-	setupDB(t)
+	db := setupdb(t)
 
 	userRepo := NewUserRepository(db)
 	_, err := userRepo.Get("test@test.com")

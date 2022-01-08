@@ -2,13 +2,14 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-)
+	"strconv"
 
-type errorObject struct {
-	Message string `json:"error"`
-}
+	"github.com/go-chi/chi"
+	"github.com/madhanganesh/todopad/api/model"
+)
 
 func handleError(err error, w http.ResponseWriter, statusCode int, message string) {
 	if message == "" {
@@ -19,8 +20,24 @@ func handleError(err error, w http.ResponseWriter, statusCode int, message strin
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(statusCode)
-	obj := errorObject{
+	obj := model.ErrorObject{
 		Message: message,
 	}
-	json.NewEncoder(w).Encode(obj)
+	err1 := json.NewEncoder(w).Encode(obj)
+	if err1 != nil {
+		log.Printf("%v", err1)
+	}
+}
+
+func getIDFromURLPath(r *http.Request) (int64, error) {
+	idStr := chi.URLParam(r, "id")
+	if idStr == "" {
+		return int64(0), fmt.Errorf("missing ID in URL Path")
+	}
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return int64(0), fmt.Errorf("invalid ID in URL Path")
+	}
+
+	return id, err
 }

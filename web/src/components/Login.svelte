@@ -101,7 +101,6 @@
     border: 1px solid var(--magenta);
     border-radius: 5px;
     padding: 1.2rem;
-    width: 50%;
     margin: 20% auto;
   }
 

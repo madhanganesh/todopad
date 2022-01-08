@@ -47,3 +47,72 @@ export async function loginAPI(email, password) {
   const result = await res.json();
   return result;
 }
+
+export async function getPendingTodosAPI(token) {
+  const payload = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+  };
+
+  const res = await fetch(`${baseURL}/todo?pending=true`, payload);
+  if (!res.ok) {
+    const text = await res.text();
+    console.log(text);
+    throw text;
+  }
+
+  const result = await res.json();
+  return result;
+}
+
+export async function addTodoAPI(token, todo) {
+  const payload = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+    body: JSON.stringify(todo),
+  };
+
+  const res = await fetch(`${baseURL}/todo`, payload);
+  if (!res.ok) {
+    const text = await res.text();
+    console.log(text);
+    throw text;
+  }
+
+  const result = await res.json();
+  return result;
+}
+
+export async function updateTodoAPI(token, todo) {
+  const payload = {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+    body: JSON.stringify(todo),
+  };
+
+  const url = `${baseURL}/todo/${todo.id}`;
+  const res = await fetch(url, payload);
+  if (!res.ok) {
+    const text = await res.text();
+    console.log(text);
+    throw text;
+  }
+
+  //const result = await res.json();
+  //return result;
+}

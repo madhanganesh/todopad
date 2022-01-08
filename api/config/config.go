@@ -33,7 +33,7 @@ func NewAppConfigFromEnv() (*App, func()) {
 		os.Exit(1)
 	}
 
-	db, err := sql.Open("sqlite3", sqliteDir+"/todopad.sqlite")
+	db, err := GetSqliteDB(sqliteDir + "/todopad.sqlite")
 	if err != nil {
 		log.Fatal(err)
 	}

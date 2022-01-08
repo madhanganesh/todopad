@@ -10,24 +10,35 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/madhanganesh/todopad/api/config"
 	"github.com/madhanganesh/todopad/api/controller"
 	"github.com/madhanganesh/todopad/api/model"
 	"github.com/madhanganesh/todopad/api/repository"
-	"github.com/rs/cors"
 )
 
 func NewServer(appConfig *config.App) http.Server {
 
 	userRepository := repository.NewUserRepository(appConfig.Db)
+	todoRepository := repository.NewTodoRepository(appConfig.Db)
 	authController := controller.NewAuthController(userRepository, appConfig.SecretKey)
+	todoController := controller.NewTodoContoller(todoRepository)
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
-	router.Use(cors.Default().Handler)
+	router.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "public"))
@@ -36,6 +47,10 @@ func NewServer(appConfig *config.App) http.Server {
 	router.Post("/signup", authController.SignUpUser)
 	router.Post("/login", authController.Login)
 	router.Get("/secureping", authController.Middleware(ping))
+	router.Post("/todo", authController.Middleware(todoController.Create))
+	router.Get("/todo/{id}", authController.Middleware(todoController.GetByID))
+	router.Get("/todo", authController.Middleware(todoController.Get))
+	router.Put("/todo/{id}", authController.Middleware(todoController.Update))
 
 	server := http.Server{
 		Addr:    ":" + appConfig.Port,

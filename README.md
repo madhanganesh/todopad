@@ -1,5 +1,10 @@
+# Commands
+goose -dir ./_db/migrations sqlite3 _db/todopad.sqlite up
+
+
 # TODO
 
-[ ] Handle token expiration case
-[ ] Forget Password
-[ ] Login/Signup scree - error stays as user start fixing it
+* Responsive UI to mobile
+* Handle token expiration case
+* Forget Password
+* Login/Signup scree - error stays as user start fixing it
