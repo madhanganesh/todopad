@@ -32,9 +32,9 @@ func NewAppConfigFromEnv() (*App, func()) {
 		os.Exit(1)
 	}
 
-	postgresDSN := os.Getenv("PG_CONNECTION_STRING")
+	postgresDSN := os.Getenv("DATABASE_URL")
 	if postgresDSN == "" {
-		fmt.Println("Env PG_CONNECTION_STRING is not set. Check README.md for more details")
+		fmt.Println("Env DATABASE_URL is not set. Check README.md for more details")
 		os.Exit(1)
 	}
 
