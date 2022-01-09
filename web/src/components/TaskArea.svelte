@@ -6,6 +6,7 @@
     getPendingTodosAPI,
     addTodoAPI,
     updateTodoAPI,
+    deleteTodoAPI,
   } from "../helpers/api.js";
 
   let title = "";
@@ -58,8 +59,15 @@
     }
   }
 
-  function deleteTodo(todoid) {
-    todos.deleteTodo(todoid);
+  async function deleteTodo(todoid) {
+    try {
+      await deleteTodoAPI($auth.authtoken, todoid);
+      //todos.deleteTodo(todoid);
+      const todoItems = await getPendingTodosAPI($auth.authtoken);
+      todos.set(todoItems);
+    } catch (error) {
+      errorMessage = error;
+    }
   }
 </script>
 

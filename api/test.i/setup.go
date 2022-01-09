@@ -2,6 +2,7 @@ package testi
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"github.com/pressly/goose"
 
 	"github.com/madhanganesh/todopad/api/config"
@@ -21,15 +22,12 @@ import (
 var appConfig *config.App
 
 func init() {
-	db, err := config.GetSqliteDB(":memory:")
-	//os.Remove("testdb.sqlite")
-	//db, err := config.GetSqliteDB("file:testdb.sqlite")
+	db, err := sql.Open("postgres", "user=postgres password=zenith sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
 
-	goose.SetDialect("sqlite3")
-	if err := goose.Up(db, "./../_db/migrations"); err != nil {
+	if err := goose.SetDialect("postgres"); err != nil {
 		panic(err)
 	}
 

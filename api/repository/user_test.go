@@ -16,7 +16,7 @@ func TestCreateUser(t *testing.T) {
 	user := model.User{Name: "Madhan Ganesh", Email: "test@test.com", Password: "password"}
 	user, err := userRepo.Create(user)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(1), user.ID, "UserID after creation should be 1")
+	assert.NotEqual(t, int64(0), user.ID, "UserID after creation should not be 0")
 }
 
 func TestAddingExistingEmail(t *testing.T) {

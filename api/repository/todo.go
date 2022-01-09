@@ -30,7 +30,7 @@ func (r *Todo) Create(todo model.Todo) (model.Todo, error) {
 	tags := strings.Join(todo.Tags, ";")
 	query := `
     insert into todos (userid, title, due, done, effort, tags, notes)
-    values ($1, $2, datetime($3), $4, $5, $6, $7) returning id`
+    values ($1, $2, $3, $4, $5, $6, $7) returning id`
 
 	row := r.db.QueryRow(query, todo.UserID, todo.Title, todo.Due, todo.Done, todo.Effort, tags, todo.Notes)
 	var id int64
@@ -44,7 +44,7 @@ func (r *Todo) Create(todo model.Todo) (model.Todo, error) {
 func (repo *Todo) GetByID(userid int64, id int64) (model.Todo, error) {
 	query := `select id, userid, title, due, done, effort, tags, notes
     			from todos
-    			where userid = ? and id = ?`
+    			where userid = $1 and id = $2`
 
 	log.Printf("TodoRepository::GetByID with UserID: %d, TodoID:%d", userid, id)
 	row := repo.db.QueryRow(query, userid, id)
@@ -68,7 +68,7 @@ func (repo *Todo) GetByID(userid int64, id int64) (model.Todo, error) {
 func (repo *Todo) GetPending(userid int64) ([]model.Todo, error) {
 	query := `
     select id, userid, title, due, done, effort, tags, notes
-    from todos where userid = ? and done = ?`
+    from todos where userid = $1 and done = $2`
 	rows, err := repo.db.Query(query, userid, false)
 	if err != nil {
 		return nil, err
@@ -97,8 +97,8 @@ func (repo *Todo) GetTodosByDateRange(userid string, from string, to string) ([]
 func (repo *Todo) Update(userid int64, id int64, todo model.Todo) error {
 	query := `
     update todos
-    set title=?, due=?, done=?, effort=?, tags=?, notes=?
-    where userid=? and id=?
+    set title=$1, due=$2, done=$3, effort=$4, tags=$5, notes=$6
+    where userid=$7 and id=$8
   `
 
 	tags := strings.Join(todo.Tags, ";")
@@ -121,8 +121,7 @@ func (repo *Todo) Update(userid int64, id int64, todo model.Todo) error {
 	return nil
 }
 
-// DeleteTodo method
-func (repo *Todo) DeleteTodo(userid string, id int64) error {
+func (repo *Todo) Delete(userid int64, id int64) error {
 	query := `delete from todos where userid=$1 and id=$2`
 	res, err := repo.db.Exec(query, userid, id)
 	if err != nil {
@@ -132,6 +131,9 @@ func (repo *Todo) DeleteTodo(userid string, id int64) error {
 	count, err := res.RowsAffected()
 	if err != nil {
 		return err
+	}
+	if count == 0 {
+		return ErrNoTodoFound
 	}
 	if count != 1 {
 		return fmt.Errorf("exactly 1 row is not impacted for %d", id)

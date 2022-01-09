@@ -24,9 +24,11 @@ func main() {
 
 func runDbMigrations(appConfig *config.App) error {
 	db := appConfig.Db
-	migrationDir := appConfig.SQLiteDir + "/migrations"
+	migrationDir := appConfig.MigrationsDir
 
-	goose.SetDialect("sqlite3")
+	if err := goose.SetDialect("postgres"); err != nil {
+		return err
+	}
 	if err := goose.Up(db, migrationDir); err != nil {
 		return err
 	}

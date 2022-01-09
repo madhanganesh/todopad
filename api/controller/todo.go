@@ -146,6 +146,32 @@ func (t *Todo) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (t *Todo) Delete(w http.ResponseWriter, r *http.Request) {
+	userid, err := getUserID(r)
+	if err != nil {
+		handleError(err, w, http.StatusUnauthorized, "")
+		return
+	}
+
+	id, err := getIDFromURLPath(r)
+	if err != nil {
+		handleError(err, w, http.StatusBadRequest, "")
+		return
+	}
+
+	err = t.todoRepository.Delete(userid, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNoTodoFound) {
+			handleError(err, w, http.StatusBadRequest, "")
+			return
+		}
+		handleError(err, w, http.StatusInternalServerError, "Internal Error. Try later or check with admin.")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func getUserID(r *http.Request) (int64, error) {
 	useridstr := r.Header.Get("userid")
 	if useridstr == "" {

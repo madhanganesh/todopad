@@ -5,40 +5,41 @@ import (
 	"testing"
 	"time"
 
-	"github.com/madhanganesh/todopad/api/config"
+	_ "github.com/lib/pq"
 	"github.com/madhanganesh/todopad/api/model"
 	"github.com/pressly/goose"
 )
 
-type dummylogger struct {
-}
+var db *sql.DB
 
-func (d *dummylogger) Fatal(...interface{})                   {}
-func (d *dummylogger) Fatalf(format string, v ...interface{}) {}
-func (d *dummylogger) Print(v ...interface{})                 {}
-func (d *dummylogger) Println(v ...interface{})               {}
-func (d *dummylogger) Printf(format string, v ...interface{}) {}
-
-func setupdb(t *testing.T) *sql.DB {
-	db, err := config.GetSqliteDB(":memory:")
-	//os.Remove("testdb.sqlite")
-	//db, err := config.GetSqliteDB("file:testdb.sqlite")
+func init() {
+	var err error
+	db, err = sql.Open("postgres", "user=postgres password=zenith sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
 
-	dlog := &dummylogger{}
-	goose.SetLogger(dlog)
-	goose.SetDialect("sqlite3")
-	if err := goose.Up(db, "./../_db/migrations"); err != nil {
+	err = goose.SetDialect("postgres")
+	if err != nil {
 		panic(err)
+	}
+}
+
+func setupdb(t *testing.T) *sql.DB {
+	_, err := db.Exec(`delete from todos`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = db.Exec(`delete from users`)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	return db
 }
 
-func adjustTodo(id int64, todo model.Todo) model.Todo {
-	todo.ID = id
-	todo.Due = time.Date(todo.Due.Year(), todo.Due.Month(), todo.Due.Day(), todo.Due.Hour(), todo.Due.Minute(), todo.Due.Second(), 0, todo.Due.Location())
+func adjustTodoDue(todo model.Todo) model.Todo {
+	todo.Due = time.Date(todo.Due.Year(), todo.Due.Month(), todo.Due.Day(), todo.Due.Hour(), todo.Due.Minute(), todo.Due.Second(), todo.Due.Nanosecond(), time.Now().UTC().Location())
 	return todo
 }

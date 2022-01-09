@@ -20,21 +20,22 @@ func NewUserRepository(db *sql.DB) *User {
 }
 
 func (r *User) Create(user model.User) (model.User, error) {
-	query := `insert into users (name, email, hpassword) values (?, ?, ?) returning id`
+	query := `insert into users (name, email, hpassword) values ($1, $2, $3) returning id`
 
-	result, err := r.db.Exec(query, user.Name, user.Email, user.Password)
+	var id int64
+	err := r.db.QueryRow(query, user.Name, user.Email, user.Password).Scan(&id)
 	if err != nil {
-		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		if strings.Contains(err.Error(), "pq: duplicate key value violates unique constraint ") {
 			return model.User{}, ErrEmailExists
 		}
 		return model.User{}, fmt.Errorf("error in repository.User::Create when inserting a user: %w", err)
 	}
-	user.ID, _ = result.LastInsertId()
+	user.ID = id
 	return user, nil
 }
 
 func (r *User) Get(email string) (model.User, error) {
-	query := `select id, name, email, hpassword from users where email=?`
+	query := `select id, name, email, hpassword from users where email=$1`
 	row := r.db.QueryRow(query, email)
 
 	var user model.User

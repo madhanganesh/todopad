@@ -3,21 +3,20 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 )
 
 type App struct {
-	Port      string
-	Db        *sql.DB
-	SecretKey []byte
-	SQLiteDir string
+	Port          string
+	Db            *sql.DB
+	SecretKey     []byte
+	MigrationsDir string
 }
 
 func NewAppConfigFromEnv() (*App, func()) {
-	sqliteDir := os.Getenv("SQLITE_DIR")
-	if sqliteDir == "" {
-		fmt.Println("Env SQLITE_DIR is not set. Check README.md for more details")
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		fmt.Println("Env MIGRATIONS_DIR is not set. Check README.md for more details")
 		os.Exit(1)
 	}
 
@@ -33,16 +32,22 @@ func NewAppConfigFromEnv() (*App, func()) {
 		os.Exit(1)
 	}
 
-	db, err := GetSqliteDB(sqliteDir + "/todopad.sqlite")
+	postgresDSN := os.Getenv("PG_CONNECTION_STRING")
+	if postgresDSN == "" {
+		fmt.Println("Env PG_CONNECTION_STRING is not set. Check README.md for more details")
+		os.Exit(1)
+	}
+
+	db, err := sql.Open("postgres", postgresDSN)
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Sprintf("DB: %v", err))
 	}
 
 	return &App{
-			Port:      port,
-			SecretKey: []byte(secretKey),
-			Db:        db,
-			SQLiteDir: sqliteDir,
+			Port:          port,
+			SecretKey:     []byte(secretKey),
+			Db:            db,
+			MigrationsDir: migrationsDir,
 		}, func() {
 			db.Close()
 		}

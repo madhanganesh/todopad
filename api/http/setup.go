@@ -51,6 +51,7 @@ func NewServer(appConfig *config.App) http.Server {
 	router.Get("/todo/{id}", authController.Middleware(todoController.GetByID))
 	router.Get("/todo", authController.Middleware(todoController.Get))
 	router.Put("/todo/{id}", authController.Middleware(todoController.Update))
+	router.Delete("/todo/{id}", authController.Middleware(todoController.Delete))
 
 	server := http.Server{
 		Addr:    ":" + appConfig.Port,

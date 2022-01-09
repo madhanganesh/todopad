@@ -116,3 +116,23 @@ export async function updateTodoAPI(token, todo) {
   //const result = await res.json();
   //return result;
 }
+
+export async function deleteTodoAPI(token, todoid) {
+  const payload = {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+  };
+
+  const url = `${baseURL}/todo/${todoid}`;
+  const res = await fetch(url, payload);
+  if (!res.ok) {
+    const text = await res.text();
+    console.log(text);
+    throw text;
+  }
+}

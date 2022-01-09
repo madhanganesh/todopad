@@ -22,7 +22,7 @@ func TestCreateTodo(t *testing.T) {
 	todo, err = todoRepo.Create(todo)
 
 	assert.NoError(t, err)
-	assert.Equal(t, int64(1), todo.ID, "User ID after creation should be 1")
+	assert.NotEqual(t, 0, todo.ID, "User ID after creation should not be 0")
 }
 
 func TestGetTodoByID(t *testing.T) {
@@ -38,7 +38,10 @@ func TestGetTodoByID(t *testing.T) {
 
 	todoRet, err := todoRepo.GetByID(user.ID, todo.ID)
 	assert.NoError(t, err)
-	todo = adjustTodo(todoRet.ID, todo)
+	lname, _ := todoRet.Due.Zone()
+	if lname == "UTC" {
+		todoRet.Due = time.Date(todo.Due.Year(), todo.Due.Month(), todo.Due.Day(), todo.Due.Hour(), todo.Due.Minute(), todo.Due.Second(), todo.Due.Nanosecond(), time.Now().UTC().Location())
+	}
 	assert.Equal(t, todo, todoRet)
 }
 
@@ -69,7 +72,7 @@ func TestGetPendingTodos(t *testing.T) {
 	todo = model.Todo{UserID: user.ID, Title: "test task 2", Done: true, Due: time.Now().UTC(), Effort: 1}
 	todoRepo.Create(todo)
 
-	pendingTodos, err := todoRepo.GetPending(1)
+	pendingTodos, err := todoRepo.GetPending(user.ID)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pendingTodos))
@@ -89,9 +92,9 @@ func TestMultiUser(t *testing.T) {
 	user2Todo := model.Todo{UserID: user2.ID, Title: "test task 2", Due: time.Now(), Effort: 2}
 	todoRepo.Create(user2Todo)
 
-	user1Todos, _ := todoRepo.GetPending(1)
+	user1Todos, _ := todoRepo.GetPending(user1Todo.UserID)
 	assert.Equal(t, 1, len(user1Todos))
-	assert.Equal(t, int64(1), user1Todo.UserID)
+	assert.Equal(t, user1Todo.UserID, user1Todos[0].UserID)
 }
 
 func TestTodoWithoutUserID(t *testing.T) {
@@ -153,4 +156,27 @@ func TestUpdateTodoForWrongID(t *testing.T) {
 
 	todo, err = todoRepo.GetByID(todo.UserID, int64(100))
 	assert.Equal(t, ErrNoTodoFound, err)
+}
+
+func TestDeleteTodo(t *testing.T) {
+	db := setupdb(t)
+	userRepo := NewUserRepository(db)
+	user := model.User{Name: "Test User", Email: "test@test.com", Password: "password"}
+	user, err := userRepo.Create(user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	todoRepo := NewTodoRepository(db)
+	todo := model.Todo{UserID: user.ID, Title: "test task 1", Due: time.Now(), Effort: 1, Done: false}
+	todo, err = todoRepo.Create(todo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = todoRepo.Delete(todo.UserID, todo.ID)
+	assert.NoError(t, err)
+
+	_, err = todoRepo.GetByID(todo.UserID, todo.ID)
+	assert.EqualError(t, err, "no todo found")
 }
