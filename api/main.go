@@ -5,7 +5,6 @@ import (
 
 	"github.com/madhanganesh/todopad/api/config"
 	"github.com/madhanganesh/todopad/api/http"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose"
 )
 
