@@ -124,10 +124,10 @@
 
   .todoinput input {
     width: 100%;
-    height: 2rem;
-    line-height: 2rem;
+    height: 2.5rem;
+    line-height: 2.5rem;
     font-family: var(--mono);
-    font-size: 1rem;
+    font-size: 1.5rem;
     border: 2px solid var(--plum);
   }
 
@@ -142,10 +142,10 @@
   }
 
   .todos ul li {
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
     cursor: pointer;
     padding: 0.1rem;
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
 
   .todos ul li:hover {

@@ -20,7 +20,14 @@
 
 <style>
   .main {
-    width: 70%;
+    width: 100%;
     margin: 0 auto;
+  }
+
+  @media (min-width: 850px) {
+    .main {
+      width: 70%;
+      margin: 0 auto;
+    }
   }
 </style>

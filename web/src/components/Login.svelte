@@ -98,6 +98,7 @@
 
 <style>
   form {
+    width: 90%;
     border: 1px solid var(--magenta);
     border-radius: 5px;
     padding: 1.2rem;
@@ -139,5 +140,11 @@
     color: grey;
     cursor: default;
     background: var(--magenta);
+  }
+
+  @media (min-width: 850px) {
+    form {
+      width: 70%;
+    }
   }
 </style>

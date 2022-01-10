@@ -4,7 +4,7 @@
 
 <header>
   <h1>
-    <span><span class="fas fa-tasks" aria-hidden="true" /> todo-pad</span>
+    <span><span class="fas fa-tasks" aria-hidden="true" /> todopad</span>
   </h1>
 
   <nav>
@@ -144,9 +144,9 @@
 </!--header-->
 <style>
   header {
-    width: 70%;
-    font-size: 70%;
-    margin: 0 auto;
+    width: 100%;
+    font-size: 60%;
+    padding: 1rem;
     font-family: var(--mono);
     display: flex;
     align-items: center;
@@ -186,5 +186,16 @@
 
   nav a:hover {
     color: var(--hotmag);
+  }
+
+  @media (min-width: 850px) {
+    header {
+      width: 70%;
+      font-size: 70%;
+      margin: 0 auto;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+    }
   }
 </style>
