@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/madhanganesh/todopad/api/model"
 )
 
-// TodoRepository struct
 type Todo struct {
 	db *sql.DB
 }
 
-// Init method
 func NewTodoRepository(db *sql.DB) *Todo {
 	return &Todo{
 		db: db,
@@ -78,10 +77,9 @@ func (repo *Todo) GetPending(userid int64) ([]model.Todo, error) {
 	return getTodosFromRows(rows)
 }
 
-// GetTodosByDateRange method
-func (repo *Todo) GetTodosByDateRange(userid string, from string, to string) ([]model.Todo, error) {
+func (repo *Todo) GetByDateRange(userid int64, from time.Time, to time.Time) ([]model.Todo, error) {
 	query := `
-    select id, userid, title, due, completed, effort, tags, notes
+    select id, userid, title, due, done, effort, tags, notes
     from todos
     where userid = $1 and (due > $2 and due < $3)
   `
@@ -147,16 +145,10 @@ func getTodosFromRows(rows *sql.Rows) ([]model.Todo, error) {
 	for rows.Next() {
 		var todo model.Todo
 		var tags string
-		//var duestr string
 		err := rows.Scan(&todo.ID, &todo.UserID, &todo.Title, &todo.Due, &todo.Done, &todo.Effort, &tags, &todo.Notes)
 		if err != nil {
 			return nil, err
 		}
-		/*todo.Due, err = time.Parse("2006-01-02 15:04:05", duestr)
-		if err != nil {
-			return nil, err
-		}*/
-
 		todo.Tags = []string{}
 		if len(tags) > 0 {
 			todo.Tags = strings.Split(tags, ";")

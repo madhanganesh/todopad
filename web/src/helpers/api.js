@@ -48,7 +48,47 @@ export async function loginAPI(email, password) {
   return result;
 }
 
-export async function getPendingTodosAPI(token) {
+export async function getTodosAPI(token, filter) {
+  if (filter === "pending") {
+    const url = `${baseURL}/todo?pending=true`;
+    return getTodosForFilter(token, url);
+  }
+
+  if (filter === "today") {
+    const from = new Date();
+    from.setHours(0, 0, 0, 0);
+    const to = new Date();
+    to.setHours(23, 59, 59, 999);
+    const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
+    return getTodosForFilter(token, url);
+  }
+
+  throw `unknown todo filter ${filter}`;
+}
+
+async function getTodosForFilter(token, url) {
+  const payload = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+  };
+
+  const res = await fetch(url, payload);
+  if (!res.ok) {
+    const text = await res.text();
+    console.log(text);
+    throw text;
+  }
+
+  const result = await res.json();
+  return result;
+}
+
+/*async function getPendingTodosAPI(token) {
   const payload = {
     method: "GET",
     headers: {
@@ -69,6 +109,31 @@ export async function getPendingTodosAPI(token) {
   const result = await res.json();
   return result;
 }
+
+async function getTodayTodos(token) {
+  const payload = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+  };
+
+  const res = await fetch(
+    ,
+    payload
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    console.log(text);
+    throw text;
+  }
+
+  const result = await res.json();
+  return result;
+}*/
 
 export async function addTodoAPI(token, todo) {
   const payload = {

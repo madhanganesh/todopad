@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/madhanganesh/todopad/api/model"
 	"github.com/madhanganesh/todopad/api/repository"
@@ -96,10 +97,46 @@ func (t *Todo) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var todos []model.Todo
-	pendings := r.URL.Query().Get("pending")
-	if pendings == "true" {
+	pending := r.URL.Query().Get("pending")
+	if pending == "true" {
 		log.Printf("invoking GetPendingTasks for user %d\n", userid)
 		todos, err = t.todoRepository.GetPending(userid)
+		if err != nil {
+			handleError(err, w, http.StatusInternalServerError, "Error reading pending todos")
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		err = json.NewEncoder(w).Encode(todos)
+		if err != nil {
+			log.Printf("Error: %v", err)
+		}
+
+		return
+	}
+
+	fromStr := r.URL.Query().Get("from")
+	if fromStr != "" {
+		toStr := r.URL.Query().Get("to")
+		if toStr == "" {
+			handleError(fmt.Errorf("Get todo request start and end date for query through date range"), w, http.StatusBadRequest, "")
+			return
+		}
+
+		log.Printf("invoking get tasks for user %d in dates from %s to %s\n", userid, fromStr, toStr)
+
+		from, err := time.Parse(time.RFC3339, fromStr)
+		if err != nil {
+			handleError(err, w, http.StatusBadRequest, "error in parsing 'from' date")
+			return
+		}
+		to, err := time.Parse(time.RFC3339, toStr)
+		if err != nil {
+			handleError(err, w, http.StatusBadRequest, "error in parsing 'to' date")
+			return
+		}
+
+		todos, err = t.todoRepository.GetByDateRange(userid, from, to)
 		if err != nil {
 			handleError(err, w, http.StatusInternalServerError, "Error reading pending todos")
 			return

@@ -73,12 +73,12 @@ func getURL(resource string) string {
 	return "http://localhost:" + appConfig.Port + "/" + resource
 }
 
-func getTestTask(t *testing.T, userid int64, title string, done bool) io.Reader {
+func getTestTask(t *testing.T, userid int64, title string, done bool, due time.Time) io.Reader {
 	var temp bytes.Buffer
 	todo := model.Todo{
 		UserID: userid,
 		Title:  title,
-		Due:    time.Now().UTC(),
+		Due:    due,
 		Effort: 1.0,
 		Done:   false,
 	}

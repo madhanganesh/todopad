@@ -180,3 +180,54 @@ func TestDeleteTodo(t *testing.T) {
 	_, err = todoRepo.GetByID(todo.UserID, todo.ID)
 	assert.EqualError(t, err, "no todo found")
 }
+
+func TestGetTodoByDateRanges(t *testing.T) {
+	db := setupdb(t)
+	userRepo := NewUserRepository(db)
+	user := model.User{Name: "Test User", Email: "test@test.com", Password: "password"}
+	user, err := userRepo.Create(user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	now := time.Now()
+
+	todoRepo := NewTodoRepository(db)
+	todoToday := model.Todo{UserID: user.ID, Title: "test task 1", Due: now.UTC(), Effort: 1, Done: false}
+	todoToday, err = todoRepo.Create(todoToday)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	todoTomorrow := model.Todo{UserID: user.ID, Title: "test task 1", Due: now.UTC().Add(1 * time.Hour * 24), Effort: 1, Done: false}
+	todoTomorrow, err = todoRepo.Create(todoTomorrow)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	todoYesterday := model.Todo{UserID: user.ID, Title: "test task 1", Due: now.UTC().Add(-1 * time.Hour * 24), Effort: 1, Done: false}
+	todoYesterday, err = todoRepo.Create(todoYesterday)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).UTC()
+	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999, now.Location()).UTC()
+	todos, err := todoRepo.GetByDateRange(todoToday.UserID, start, end)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(todos))
+	if len(todos) > 0 {
+		assert.Equal(t, todoToday.ID, todos[0].ID)
+	}
+
+	yesterday := now.Add(-1 * time.Hour * 24)
+	start = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, yesterday.Location()).UTC()
+	tomorrow := now.Add(1 * time.Hour * 24)
+	end = time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 23, 59, 59, 999, tomorrow.Location()).UTC()
+	todos, err = todoRepo.GetByDateRange(todoToday.UserID, start, end)
+	assert.NoError(t, err)
+	assert.Equal(t, 3, len(todos))
+	if len(todos) > 0 {
+		assert.Equal(t, todoToday.ID, todos[0].ID)
+	}
+}
