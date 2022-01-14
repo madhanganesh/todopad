@@ -3,6 +3,8 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -13,16 +15,19 @@ type todoPadClaims struct {
 	jwt.StandardClaims
 	UserID int64  `json:"userid"`
 	Email  string `json:"email"`
+	Name   string `json:"name"`
 }
 
 func getJWT(secretKey []byte, user model.User) (string, error) {
 	claims := todoPadClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
-			Issuer:    "todopad",
+			//ExpiresAt: time.Now().Add(1 * time.Minute).Unix(),
+			Issuer: "todopad",
 		},
 		UserID: user.ID,
 		Email:  user.Email,
+		Name:   user.Name,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -38,6 +43,10 @@ func validateToken(accessToken string, signingKey []byte) (*todoPadClaims, error
 	})
 
 	if err != nil {
+		if strings.Contains(err.Error(), "token is expired") {
+			log.Printf("%v", err)
+			return nil, ErrTokenExpired
+		}
 		return nil, err
 	}
 
@@ -49,3 +58,5 @@ func validateToken(accessToken string, signingKey []byte) (*todoPadClaims, error
 
 	return nil, errors.New("invalid token")
 }
+
+var ErrTokenExpired = errors.New("token expired")

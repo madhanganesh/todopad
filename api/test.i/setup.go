@@ -11,40 +11,39 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/lib/pq"
-	"github.com/pressly/goose"
-
 	"github.com/madhanganesh/todopad/api/config"
 	todohttp "github.com/madhanganesh/todopad/api/http"
 	"github.com/madhanganesh/todopad/api/model"
 )
 
-var appConfig *config.App
+var appConfig config.App
+var db *sql.DB
 
 func init() {
-	db, err := sql.Open("postgres", "user=postgres password=zenith sslmode=disable")
+	var err error
+	port := "3000"
+	secretKey := "testsecretkey"
+	databaseURL := ":memory:"
+	migrationsDir := "../_scripts/migrations"
+
+	appConfig = config.NewConfig(port, secretKey, databaseURL, migrationsDir)
+	db, err = config.InitializeDB(appConfig.DatabaseURL, appConfig.MigrationsDir)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := goose.SetDialect("postgres"); err != nil {
-		panic(err)
-	}
-
-	appConfig = config.NewAppConfigFromParams("3000", "testsecretkey", db)
-	httpServer := todohttp.NewServer(appConfig)
-
+	httpServer := todohttp.NewServer(appConfig, db)
 	go httpServer.ListenAndServe()
 }
 
 func setupDB(t *testing.T) {
 	t.Helper()
 
-	_, err := appConfig.Db.Exec(`delete from todos`)
+	_, err := db.Exec(`delete from todos`)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = appConfig.Db.Exec(`delete from users`)
+	_, err = db.Exec(`delete from users`)
 	if err != nil {
 		t.Fatal(err)
 	}

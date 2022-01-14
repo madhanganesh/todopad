@@ -2,35 +2,26 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/madhanganesh/todopad/api/config"
 	"github.com/madhanganesh/todopad/api/http"
-	"github.com/pressly/goose"
 )
 
 func main() {
-	appConfig, cleanup := config.NewAppConfigFromEnv()
-	defer cleanup()
-
-	err := runDbMigrations(appConfig)
+	appConfig, err := config.NewConfigFromEnvs()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%v", err)
+		os.Exit(1)
 	}
 
-	httpServer := http.NewServer(appConfig)
+	db, err := config.InitializeDB(appConfig.DatabaseURL, appConfig.MigrationsDir)
+	if err != nil {
+		log.Printf("Error in initializing DB: %v", err)
+		os.Exit(1)
+	}
+
+	httpServer := http.NewServer(appConfig, db)
+
 	log.Fatal(httpServer.ListenAndServe())
-}
-
-func runDbMigrations(appConfig *config.App) error {
-	db := appConfig.Db
-	migrationDir := appConfig.MigrationsDir
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		return err
-	}
-	if err := goose.Up(db, migrationDir); err != nil {
-		return err
-	}
-
-	return nil
 }

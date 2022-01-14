@@ -42,6 +42,29 @@ func TestGetUser(t *testing.T) {
 	assert.Equal(t, user, userRet, "Want: %v, Got: %v", user, userRet)
 }
 
+func TestGetUserByID(t *testing.T) {
+	db := setupdb(t)
+
+	userRepo := NewUserRepository(db)
+	user := model.User{Name: "Madhan Ganesh", Email: "test@test.com", Password: "password"}
+	user, _ = userRepo.Create(user)
+
+	userRet, err := userRepo.GetByID(user.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, user, userRet, "Want: %v, Got: %v", user, userRet)
+}
+
+func TestNoUserByID(t *testing.T) {
+	db := setupdb(t)
+
+	userRepo := NewUserRepository(db)
+	user := model.User{Name: "Madhan Ganesh", Email: "test@test.com", Password: "password"}
+	user, _ = userRepo.Create(user)
+
+	_, err := userRepo.GetByID(int64(99))
+	assert.Equal(t, ErrNoUserExists, err)
+}
+
 func TestGetUserForNotExists(t *testing.T) {
 	db := setupdb(t)
 

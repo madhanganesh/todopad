@@ -1,12 +1,11 @@
 package http
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -17,10 +16,10 @@ import (
 	"github.com/madhanganesh/todopad/api/repository"
 )
 
-func NewServer(appConfig *config.App) http.Server {
+func NewServer(appConfig config.App, db *sql.DB) http.Server {
 
-	userRepository := repository.NewUserRepository(appConfig.Db)
-	todoRepository := repository.NewTodoRepository(appConfig.Db)
+	userRepository := repository.NewUserRepository(db)
+	todoRepository := repository.NewTodoRepository(db)
 	authController := controller.NewAuthController(userRepository, appConfig.SecretKey)
 	todoController := controller.NewTodoContoller(todoRepository)
 
@@ -40,9 +39,13 @@ func NewServer(appConfig *config.App) http.Server {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	workDir, _ := os.Getwd()
-	filesDir := http.Dir(filepath.Join(workDir, "public"))
-	FileServer(router, "/", filesDir)
+	//workDir, _ := os.Getwd()
+	//filesDir := http.Dir(filepath.Join(workDir, "public"))
+	//FileServer(router, "/", filesDir)
+
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "avilable")
+	})
 
 	router.Post("/signup", authController.SignUpUser)
 	router.Post("/login", authController.Login)
@@ -75,7 +78,7 @@ func ping(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func FileServer(r chi.Router, path string, root http.FileSystem) {
+/*func FileServer(r chi.Router, path string, root http.FileSystem) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
@@ -92,4 +95,4 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
 		fs.ServeHTTP(w, r)
 	})
-}
+}*/

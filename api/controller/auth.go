@@ -26,6 +26,7 @@ func NewAuthController(userRepository *repository.User, secretKey []byte) *Auth 
 }
 
 func (c *Auth) SignUpUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Auth Controller, SignupUser invoked")
 	var user model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -139,6 +140,16 @@ func (c *Auth) Middleware(handler http.HandlerFunc) http.HandlerFunc {
 		claims, err := validateToken(authHeaderParts[1], c.signingKey)
 		if err != nil {
 			handleError(err, w, http.StatusUnauthorized, "invalid auth token")
+			return
+		}
+
+		user, err := c.userRepository.GetByID(claims.UserID)
+		if err != nil || user.Email != claims.Email {
+			username := claims.Name
+			if username == "" {
+				username = claims.Email
+			}
+			handleError(err, w, http.StatusUnauthorized, fmt.Sprintf("User '%s' not found. Please logout and signup for the user.", username))
 			return
 		}
 

@@ -1,62 +1,38 @@
 package config
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 )
 
 type App struct {
 	Port          string
-	Db            *sql.DB
 	SecretKey     []byte
+	DatabaseURL   string
 	MigrationsDir string
 }
 
-func NewAppConfigFromEnv() (*App, func()) {
-	migrationsDir := os.Getenv("MIGRATIONS_DIR")
-	if migrationsDir == "" {
-		fmt.Println("Env MIGRATIONS_DIR is not set. Check README.md for more details")
-		os.Exit(1)
-	}
-
-	secretKey := os.Getenv("SECRET_KEY")
-	if secretKey == "" {
-		fmt.Println("Env SECRET_KEY is not set. Check README.md for more details")
-		os.Exit(1)
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		fmt.Println("Env PORT is not set. Check README.md for more details")
-		os.Exit(1)
-	}
-
-	postgresDSN := os.Getenv("DATABASE_URL")
-	if postgresDSN == "" {
-		fmt.Println("Env DATABASE_URL is not set. Check README.md for more details")
-		os.Exit(1)
-	}
-
-	db, err := sql.Open("postgres", postgresDSN)
-	if err != nil {
-		panic(fmt.Sprintf("DB: %v", err))
-	}
-
-	return &App{
-			Port:          port,
-			SecretKey:     []byte(secretKey),
-			Db:            db,
-			MigrationsDir: migrationsDir,
-		}, func() {
-			db.Close()
+func NewConfigFromEnvs() (App, error) {
+	environmentVariables := map[string]string{"PORT": "", "SECRET_KEY": "", "DATABASE_URL": "", "MIGRATIONS_DIR": ""}
+	for key := range environmentVariables {
+		value := os.Getenv(key)
+		if value == "" {
+			return App{}, fmt.Errorf("environment variable '%s' is not present", key)
 		}
+
+		environmentVariables[key] = value
+	}
+
+	appConfig := App{
+		Port:          environmentVariables["PORT"],
+		SecretKey:     []byte(environmentVariables["SECRET_KEY"]),
+		DatabaseURL:   environmentVariables["DATABASE_URL"],
+		MigrationsDir: environmentVariables["MIGRATIONS_DIR"],
+	}
+
+	return appConfig, nil
 }
 
-func NewAppConfigFromParams(port string, secretKey string, db *sql.DB) *App {
-	return &App{
-		Port:      port,
-		SecretKey: []byte(secretKey),
-		Db:        db,
-	}
+func NewConfig(port, secretKey, databaseURL, migrationsDir string) App {
+	return App{Port: port, SecretKey: []byte(secretKey), DatabaseURL: databaseURL, MigrationsDir: migrationsDir}
 }

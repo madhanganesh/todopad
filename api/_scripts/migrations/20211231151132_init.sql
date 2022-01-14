@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-create table users (id serial primary key, name text not null, email varchar(75) UNIQUE NOT NULL, hpassword text UNIQUE NOT NULL);
+create table users (id integer primary key AUTOINCREMENT, name text not null, email char(50) UNIQUE, hpassword char(200));
 -- +goose StatementEnd
 
 -- +goose Down

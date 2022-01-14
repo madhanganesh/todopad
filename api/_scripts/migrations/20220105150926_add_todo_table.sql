@@ -1,15 +1,15 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE todos (
-	id SERIAL PRIMARY KEY,
-	userid integer NOT NULL,
-	title VARCHAR(500) NOT NULL,
-	due timestamp with time zone default (now() at time zone 'utc'),
-	done BOOLEAN NOT NULL default(false),
-	effort FLOAT default (0),
-	tags VARCHAR(500) NOT NULL default(''),
-	notes TEXT NOT NULL default(''),
-    CONSTRAINT fk_user FOREIGN KEY(userid) REFERENCES users(id)
+	id integer primary key AUTOINCREMENT,
+	userid integer not null,
+	title TEXT NOT NULL,
+	due DATETIME DEFAULT(datetime('now')),
+	done NUMERIC,
+	effort FLOAT default 0,
+	tags TEXT NOT NULL default "",
+	notes TEXT NOT NULL default "",
+	FOREIGN KEY (userid) REFERENCES users(id) ON UPDATE RESTRICT
 );
 -- +goose StatementEnd
 

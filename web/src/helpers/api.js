@@ -1,7 +1,7 @@
-let baseURL = "";
+let baseURL = "https://gokarma.in/api";
 
 if (process.env.NODE_ENV !== "production") {
-  baseURL = "http://127.0.0.1:8080";
+  baseURL = "http://localhost:8080";
 }
 
 export async function signupAPI(name, email, password) {
@@ -48,19 +48,63 @@ export async function loginAPI(email, password) {
   return result;
 }
 
-export async function getTodosAPI(token, filter) {
-  if (filter === "pending") {
-    const url = `${baseURL}/todo?pending=true`;
-    return getTodosForFilter(token, url);
+function checkErrorForAuth(error) {
+  try {
+    if (typeof error === "string") {
+      if (error.trim() === "404 page not found") {
+        error = "Unable to perform this action now. Please try after sometime.";
+      } else {
+        const errObj = JSON.parse(error);
+        if (errObj && errObj.error) {
+          error = errObj.error;
+          if (error.includes("invalid auth token")) {
+            error = "Auth Token Expired. Please logout and login again.";
+          }
+        }
+      }
+    }
+    return error;
+  } catch (e) {
+    console.error(e);
+    return error;
   }
+}
 
-  if (filter === "today") {
-    const from = new Date();
-    from.setHours(0, 0, 0, 0);
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
-    const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
-    return getTodosForFilter(token, url);
+export async function getTodosAPI(token, filter) {
+  try {
+    if (filter === "pending") {
+      const url = `${baseURL}/todo?pending=true`;
+      return await getTodosForFilter(token, url);
+    }
+
+    if (filter === "today") {
+      const from = new Date();
+      from.setHours(0, 0, 0, 0);
+      const to = new Date();
+      to.setHours(23, 59, 59, 999);
+      const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
+      return await getTodosForFilter(token, url);
+    }
+
+    if (filter === "tomorrow") {
+      const from = new Date(+new Date() + 86400000);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date();
+      to.setHours(23, 59, 59, 999);
+      const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
+      return await getTodosForFilter(token, url);
+    }
+
+    if (filter === "yesterday") {
+      const from = new Date(+new Date() - 86400000);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date();
+      to.setHours(23, 59, 59, 999);
+      const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
+      return await getTodosForFilter(token, url);
+    }
+  } catch (error) {
+    throw checkErrorForAuth(error);
   }
 
   throw `unknown todo filter ${filter}`;
@@ -88,53 +132,6 @@ async function getTodosForFilter(token, url) {
   return result;
 }
 
-/*async function getPendingTodosAPI(token) {
-  const payload = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-      Origin: "http://127.0.0.1:5000",
-    },
-  };
-
-  const res = await fetch(`${baseURL}/todo?pending=true`, payload);
-  if (!res.ok) {
-    const text = await res.text();
-    console.log(text);
-    throw text;
-  }
-
-  const result = await res.json();
-  return result;
-}
-
-async function getTodayTodos(token) {
-  const payload = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-      Origin: "http://127.0.0.1:5000",
-    },
-  };
-
-  const res = await fetch(
-    ,
-    payload
-  );
-  if (!res.ok) {
-    const text = await res.text();
-    console.log(text);
-    throw text;
-  }
-
-  const result = await res.json();
-  return result;
-}*/
-
 export async function addTodoAPI(token, todo) {
   const payload = {
     method: "POST",
@@ -147,15 +144,20 @@ export async function addTodoAPI(token, todo) {
     body: JSON.stringify(todo),
   };
 
-  const res = await fetch(`${baseURL}/todo`, payload);
-  if (!res.ok) {
-    const text = await res.text();
-    console.log(text);
-    throw text;
-  }
+  try {
+    const url = `${baseURL}/todo`;
+    const res = await fetch(url, payload);
+    if (!res.ok) {
+      const text = await res.text();
+      console.log(text);
+      throw text;
+    }
 
-  const result = await res.json();
-  return result;
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    throw checkErrorForAuth(error);
+  }
 }
 
 export async function updateTodoAPI(token, todo) {
@@ -170,16 +172,17 @@ export async function updateTodoAPI(token, todo) {
     body: JSON.stringify(todo),
   };
 
-  const url = `${baseURL}/todo/${todo.id}`;
-  const res = await fetch(url, payload);
-  if (!res.ok) {
-    const text = await res.text();
-    console.log(text);
-    throw text;
+  try {
+    const url = `${baseURL}/todo/${todo.id}`;
+    const res = await fetch(url, payload);
+    if (!res.ok) {
+      const text = await res.text();
+      console.log(text);
+      throw text;
+    }
+  } catch (error) {
+    throw checkErrorForAuth(error);
   }
-
-  //const result = await res.json();
-  //return result;
 }
 
 export async function deleteTodoAPI(token, todoid) {
@@ -193,11 +196,15 @@ export async function deleteTodoAPI(token, todoid) {
     },
   };
 
-  const url = `${baseURL}/todo/${todoid}`;
-  const res = await fetch(url, payload);
-  if (!res.ok) {
-    const text = await res.text();
-    console.log(text);
-    throw text;
+  try {
+    const url = `${baseURL}/todo/${todoid}`;
+    const res = await fetch(url, payload);
+    if (!res.ok) {
+      const text = await res.text();
+      console.log(text);
+      throw text;
+    }
+  } catch (error) {
+    throw checkErrorForAuth(error);
   }
 }

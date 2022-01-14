@@ -1,7 +1,7 @@
 <script>
   import auth from "../store/auth.js";
   import Login from "./Login.svelte";
-  import TasksArea from "./TaskArea.svelte";
+  import TodoArea from "./TodoArea.svelte";
 </script>
 
 <div class="main">
@@ -12,7 +12,7 @@
   {:else if $auth.state === "login"}
     <Login />
   {:else if $auth.state === "loggedin"}
-    <TasksArea />
+    <TodoArea />
   {:else}
     <h1>Unknown state</h1>
   {/if}
