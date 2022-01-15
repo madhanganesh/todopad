@@ -1,4 +1,4 @@
-let baseURL = "https://gokarma.in/api";
+let baseURL = "https://todopad.in/api";
 
 if (process.env.NODE_ENV !== "production") {
   baseURL = "http://localhost:8080";
