@@ -1,6 +1,5 @@
-# Commands
-### Dev
-### API
+# Commands to run locally for development
+## API
 ```
 cd api
 source _scripts/dev.sh
@@ -8,20 +7,12 @@ go run main.go
 API Server started in port 8080
 ```
 
-### Web
+## Web
 ```
 cd web
 npm run dev
 navigate to http://localhost:5500
 ```
-
-# TODO
-
-* Responsive UI to mobile
-* Handle token expiration case
-* Forget Password
-* Login/Signup scree - error stays as user start fixing it
-* Fix: user not found but adding todo (Internal Error. Try later or check with admin.: error in repository.Todo::Create when inserting a todo: pq: insert or update on table "todos" violates foreign key constraint "fk_user")
 
 # DO scripts
 ## nginx conf

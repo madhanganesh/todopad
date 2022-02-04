@@ -1,6 +1,22 @@
 <script>
   import auth from "../store/auth.js";
+  import Modal from "../UI/Modal.svelte";
+  import About from "./About.svelte";
+  import Button from "../UI/Button.svelte";
+
+  let showAbout = false;
 </script>
+
+{#if showAbout}
+  <Modal title="Todopad">
+    <About on:close={(showAbout = false)} />
+    <div slot="footer">
+      <Button type="button" mode="outline" on:click={() => (showAbout = false)}
+        >Close</Button
+      >
+    </div>
+  </Modal>
+{/if}
 
 <header>
   <h1>
@@ -32,6 +48,9 @@
           >
         </li>
       {/if}
+      <li>
+        <a href="/" on:click|preventDefault={() => (showAbout = true)}>About</a>
+      </li>
     </ul>
   </nav>
 </header>

@@ -20,8 +20,12 @@ func NewServer(appConfig config.App, db *sql.DB) http.Server {
 
 	userRepository := repository.NewUserRepository(db)
 	todoRepository := repository.NewTodoRepository(db)
+	userTagsRepository := repository.NewUserTagsRepository(db)
+
 	authController := controller.NewAuthController(userRepository, appConfig.SecretKey)
-	todoController := controller.NewTodoContoller(todoRepository)
+	todoController := controller.NewTodoContoller(todoRepository, userTagsRepository)
+	userTagsController := controller.NewUserTagsContoller(userTagsRepository)
+	reportController := controller.NewReportContoller(todoRepository)
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -55,6 +59,8 @@ func NewServer(appConfig config.App, db *sql.DB) http.Server {
 	router.Get("/todo", authController.Middleware(todoController.Get))
 	router.Put("/todo/{id}", authController.Middleware(todoController.Update))
 	router.Delete("/todo/{id}", authController.Middleware(todoController.Delete))
+	router.Get("/usertags", authController.Middleware(userTagsController.GetUserTags))
+	router.Post("/report", authController.Middleware(reportController.GetAdhoc))
 
 	server := http.Server{
 		Addr:    ":" + appConfig.Port,

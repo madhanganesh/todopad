@@ -1,8 +1,8 @@
 import { writable } from "svelte/store";
 
-const internal = writable([]);
+const todos = writable([]);
 
-const todos = {
+/*const todos = {
   subscribe: internal.subscribe,
 
   set: (todos) => {
@@ -32,6 +32,6 @@ const todos = {
       return newItems;
     });
   },
-};
+};*/
 
 export default todos;

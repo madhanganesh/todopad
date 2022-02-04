@@ -3,11 +3,13 @@
 
   const dispatch = createEventDispatcher();
 
+  export let controlType = null;
   export let id;
   export let label;
   export let value;
   export let type;
   export let autofocus = 0;
+  export let rows = 5;
 
   export let valid = true;
   export let validityMessage = "";
@@ -30,14 +32,18 @@
 
 <div class="form-control">
   <label for={id}>{label}</label>
-  <input
-    bind:this={elm}
-    class:invalid={showValidityMessage}
-    {type}
-    {id}
-    {value}
-    on:input={onInput}
-  />
+  {#if controlType === "textarea"}
+    <textarea {rows} {id} {value} on:input={onInput} />
+  {:else}
+    <input
+      bind:this={elm}
+      class:invalid={showValidityMessage}
+      {type}
+      {id}
+      {value}
+      on:input={onInput}
+    />
+  {/if}
   {#if showValidityMessage}
     <p class="error-message">{validityMessage}</p>
   {/if}
@@ -56,6 +62,10 @@
     transition: border-color 0.1s ease-out;
   }
 
+  textarea {
+    width: 100%;
+  }
+
   input:focus {
     border-color: var(--magenta);
     outline: none;
@@ -65,6 +75,7 @@
     display: block;
     margin-bottom: 0.5rem;
     width: 100%;
+    font-weight: bold;
   }
 
   .form-control {

@@ -19,6 +19,8 @@ import (
 var appConfig config.App
 var db *sql.DB
 
+var NoTags = []string{}
+
 func init() {
 	var err error
 	port := "3000"
@@ -72,15 +74,16 @@ func getURL(resource string) string {
 	return "http://localhost:" + appConfig.Port + "/" + resource
 }
 
-func getTestTask(t *testing.T, userid int64, title string, done bool, due time.Time) io.Reader {
-	var temp bytes.Buffer
+func getTestTask(t *testing.T, userid int64, title string, done bool, due time.Time, tags []string) io.Reader {
 	todo := model.Todo{
 		UserID: userid,
 		Title:  title,
 		Due:    due,
 		Effort: 1.0,
+		Tags:   tags,
 		Done:   false,
 	}
+	var temp bytes.Buffer
 	err := json.NewEncoder(&temp).Encode(todo)
 	if err != nil {
 		t.Fatal(err)

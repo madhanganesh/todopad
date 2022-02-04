@@ -16,7 +16,7 @@ import (
 func TestCreateTodo(t *testing.T) {
 	setupDB(t)
 	loginResponse := setupUser(t, "usr1")
-	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC())
+	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC(), NoTags)
 
 	req, err := http.NewRequest("POST", getURL("todo"), todoData)
 	assert.NoError(t, err)
@@ -33,10 +33,33 @@ func TestCreateTodo(t *testing.T) {
 	assert.NotEqual(t, int64(0), todo.ID)
 }
 
+func TestCreateTodoWithTags(t *testing.T) {
+	setupDB(t)
+	loginResponse := setupUser(t, "usr1")
+	now := time.Now()
+	tags := []string{"tag1", "tag2"}
+	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, now.UTC(), tags)
+
+	req, err := http.NewRequest("POST", getURL("todo"), todoData)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+
+	client := http.Client{}
+	res, err := client.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+	var todo model.Todo
+	err = json.NewDecoder(res.Body).Decode(&todo)
+	assert.NoError(t, err)
+
+	expected := model.Todo{ID: todo.ID, UserID: loginResponse.UserID, Title: "todo-1", Due: now.UTC(), Effort: 1, Tags: tags}
+	assert.Equal(t, expected, todo)
+}
+
 func TestGetTodoByID(t *testing.T) {
 	setupDB(t)
 	loginResponse := setupUser(t, "usr1")
-	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC())
+	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC(), NoTags)
 	req, err := http.NewRequest("POST", getURL("todo"), todoData)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
@@ -63,14 +86,14 @@ func TestPendingTodos(t *testing.T) {
 	loginResponse := setupUser(t, "usr1")
 	client := http.Client{}
 
-	todoData1 := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC())
+	todoData1 := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC(), NoTags)
 	req, _ := http.NewRequest("POST", getURL("todo"), todoData1)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 	res, err := client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-	todoData2 := getTestTask(t, loginResponse.UserID, "todo-2", true, time.Now().UTC())
+	todoData2 := getTestTask(t, loginResponse.UserID, "todo-2", true, time.Now().UTC(), NoTags)
 	req, _ = http.NewRequest("POST", getURL("todo"), todoData2)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 	res, err = client.Do(req)
@@ -91,7 +114,7 @@ func TestGetTodosByDateRange(t *testing.T) {
 
 	now := time.Now()
 
-	todoData1 := getTestTask(t, loginResponse.UserID, "todo-1", false, now.UTC())
+	todoData1 := getTestTask(t, loginResponse.UserID, "todo-1", false, now.UTC(), NoTags)
 	req, _ := http.NewRequest("POST", getURL("todo"), todoData1)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 	res, err := client.Do(req)
@@ -101,14 +124,14 @@ func TestGetTodosByDateRange(t *testing.T) {
 	err = json.NewDecoder(res.Body).Decode(&todoToday)
 	assert.NoError(t, err)
 
-	todoData2 := getTestTask(t, loginResponse.UserID, "todo-2", true, now.Add(1*time.Hour*24))
+	todoData2 := getTestTask(t, loginResponse.UserID, "todo-2", true, now.Add(1*time.Hour*24).UTC(), NoTags)
 	req, _ = http.NewRequest("POST", getURL("todo"), todoData2)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 	res, err = client.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-	todoData3 := getTestTask(t, loginResponse.UserID, "todo-3", true, now.Add(-1*time.Hour*24))
+	todoData3 := getTestTask(t, loginResponse.UserID, "todo-3", true, now.Add(-1*time.Hour*24).UTC(), NoTags)
 	req, _ = http.NewRequest("POST", getURL("todo"), todoData3)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 	res, err = client.Do(req)
@@ -177,7 +200,7 @@ func TestGetTodsWithNoFilter(t *testing.T) {
 func TestToggleDone(t *testing.T) {
 	setupDB(t)
 	loginResponse := setupUser(t, "usr1")
-	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC())
+	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC(), NoTags)
 
 	req, err := http.NewRequest("POST", getURL("todo"), todoData)
 	assert.NoError(t, err)
@@ -221,7 +244,7 @@ func TestToggleDone(t *testing.T) {
 func TestDeleteTodo(t *testing.T) {
 	setupDB(t)
 	loginResponse := setupUser(t, "usr1")
-	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC())
+	todoData := getTestTask(t, loginResponse.UserID, "todo-1", false, time.Now().UTC(), NoTags)
 	req, err := http.NewRequest("POST", getURL("todo"), todoData)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)

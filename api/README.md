@@ -3,7 +3,7 @@
 source _scripts\dev.sh
 ```
 
-# Perfroamnce command
+#Performance command
 ## DO - PG
 ```
 plow "https://todopad.in/todo?pending=true" -c 300 -n 20000  -H Authorization:"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDIzMDc5MzIsImlzcyI6InRvZG9wYWQiLCJ1c2VyaWQiOjEsImVtYWlsIjoibWFkaGFuZ2FuZXNoQGdtYWlsLmNvbSJ9.T4Jwr4sYfX_Xf4D8O30zwPtUeONlmFpF8N4k9ofhNjw" 

@@ -1,12 +1,15 @@
 <script>
   import auth from "../store/auth.js";
+
+  import Home from "./Home.svelte";
   import Login from "./Login.svelte";
   import TodoArea from "./TodoArea.svelte";
+  import About from "./About.svelte";
 </script>
 
 <div class="main">
   {#if $auth.state === "loggedout"}
-    <h1>Signin please</h1>
+    <Home />
   {:else if $auth.state === "signup"}
     <Login signup={true} />
   {:else if $auth.state === "login"}
@@ -14,7 +17,7 @@
   {:else if $auth.state === "loggedin"}
     <TodoArea />
   {:else}
-    <h1>Unknown state</h1>
+    <About />
   {/if}
 </div>
 

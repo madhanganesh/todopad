@@ -21,7 +21,7 @@ type todoPadClaims struct {
 func getJWT(secretKey []byte, user model.User) (string, error) {
 	claims := todoPadClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+			ExpiresAt: time.Now().Add(365 * 24 * time.Hour).Unix(),
 			//ExpiresAt: time.Now().Add(1 * time.Minute).Unix(),
 			Issuer: "todopad",
 		},

@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 let baseURL = "https://todopad.in/api";
 
 if (process.env.NODE_ENV !== "production") {
@@ -14,7 +16,6 @@ export async function signupAPI(name, email, password) {
   const res = await fetch(`${baseURL}/signup`, payload);
   if (!res.ok) {
     const text = await res.text();
-    console.log(text);
     if (res.status === 409) {
       throw "Email already exists. Please login if you have registered already.";
     }
@@ -35,7 +36,6 @@ export async function loginAPI(email, password) {
   const res = await fetch(`${baseURL}/login`, payload);
   if (!res.ok) {
     const text = await res.text();
-    console.log(text);
     if (res.status === 404) {
       throw "Email not found. Please login with valid credentials.";
     } else if (res.status === 403) {
@@ -72,42 +72,27 @@ function checkErrorForAuth(error) {
 
 export async function getTodosAPI(token, filter) {
   try {
-    if (filter === "pending") {
+    if (filter.filter === "pending") {
       const url = `${baseURL}/todo?pending=true`;
       return await getTodosForFilter(token, url);
     }
 
-    if (filter === "today") {
-      const from = new Date();
-      from.setHours(0, 0, 0, 0);
-      const to = new Date();
-      to.setHours(23, 59, 59, 999);
-      const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
+    const from = dayjs(filter.dates.from).startOf("d").toISOString();
+    const to = dayjs(filter.dates.to).endOf("d").toISOString();
+    const url = `${baseURL}/todo?from=${from}&to=${to}`;
+    return await getTodosForFilter(token, url);
+
+    /*if (filter.startsWith("from")) {
+      const url = `${baseURL}/todo?${filter}`;
       return await getTodosForFilter(token, url);
     }
 
-    if (filter === "tomorrow") {
-      const from = new Date(+new Date() + 86400000);
-      from.setHours(0, 0, 0, 0);
-      const to = new Date();
-      to.setHours(23, 59, 59, 999);
-      const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
-      return await getTodosForFilter(token, url);
-    }
-
-    if (filter === "yesterday") {
-      const from = new Date(+new Date() - 86400000);
-      from.setHours(0, 0, 0, 0);
-      const to = new Date();
-      to.setHours(23, 59, 59, 999);
-      const url = `${baseURL}/todo?from=${from.toISOString()}&to=${to.toISOString()}`;
-      return await getTodosForFilter(token, url);
-    }
+    const range = getFormattedDates(filter);
+    const url = `${baseURL}/todo?from=${range.from}&to=${range.to}`;
+    return await getTodosForFilter(token, url);*/
   } catch (error) {
     throw checkErrorForAuth(error);
   }
-
-  throw `unknown todo filter ${filter}`;
 }
 
 async function getTodosForFilter(token, url) {
@@ -124,11 +109,13 @@ async function getTodosForFilter(token, url) {
   const res = await fetch(url, payload);
   if (!res.ok) {
     const text = await res.text();
-    console.log(text);
     throw text;
   }
 
-  const result = await res.json();
+  let result = await res.json();
+  result = result.map((r) => {
+    return { ...r, due: new Date(r.due) };
+  });
   return result;
 }
 
@@ -149,7 +136,6 @@ export async function addTodoAPI(token, todo) {
     const res = await fetch(url, payload);
     if (!res.ok) {
       const text = await res.text();
-      console.log(text);
       throw text;
     }
 
@@ -177,7 +163,6 @@ export async function updateTodoAPI(token, todo) {
     const res = await fetch(url, payload);
     if (!res.ok) {
       const text = await res.text();
-      console.log(text);
       throw text;
     }
   } catch (error) {
@@ -201,10 +186,81 @@ export async function deleteTodoAPI(token, todoid) {
     const res = await fetch(url, payload);
     if (!res.ok) {
       const text = await res.text();
-      console.log(text);
       throw text;
     }
   } catch (error) {
     throw checkErrorForAuth(error);
   }
+}
+
+export async function getUserTags(token) {
+  const url = `${baseURL}/usertags`;
+  const payload = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+  };
+
+  const res = await fetch(url, payload);
+  if (!res.ok) {
+    const text = await res.text();
+    throw text;
+  }
+
+  const result = await res.json();
+  return result;
+}
+
+export async function getAdhocReportAPI(token, reportRequest) {
+  const payload = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      Origin: "http://127.0.0.1:5000",
+    },
+    body: JSON.stringify(reportRequest),
+  };
+
+  try {
+    const url = `${baseURL}/report`;
+    const res = await fetch(url, payload);
+    if (!res.ok) {
+      const text = await res.text();
+      throw text;
+    }
+    const result = await res.json();
+    return result;
+  } catch (error) {
+    throw checkErrorForAuth(error);
+  }
+}
+
+function getFormattedDates(filter) {
+  let dates = getDateRangeForFilter(filter);
+  return {
+    from: dates.from.toISOString(),
+    to: dates.to.toISOString(),
+  };
+}
+
+function getDateRangeForFilter(filter) {
+  let date = getDateForFilter(filter);
+  return {
+    from: date.startOf("d").toDate(),
+    to: date.endOf("d").toDate(),
+  };
+}
+
+function getDateForFilter(filter) {
+  if (filter === "today") return dayjs();
+  if (filter === "yesterday") return dayjs().subtract(1, "d");
+  if (filter === "tomorrow") return dayjs().add(1, "d");
+
+  throw `Unsuported date filter ${filter}`;
 }

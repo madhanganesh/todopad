@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -25,6 +26,7 @@ func setupdb(t *testing.T) *sql.DB {
 		t.Fatal(err)
 	}
 
+	rand.Seed(time.Now().UTC().UnixNano())
 	return db
 }
 

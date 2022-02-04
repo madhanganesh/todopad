@@ -14,12 +14,14 @@ import (
 )
 
 type Todo struct {
-	todoRepository *repository.Todo
+	todoRepository     *repository.Todo
+	userTagsRepository *repository.UserTags
 }
 
-func NewTodoContoller(todoRepository *repository.Todo) *Todo {
+func NewTodoContoller(todoRepository *repository.Todo, userTagsRepository *repository.UserTags) *Todo {
 	return &Todo{
-		todoRepository: todoRepository,
+		todoRepository:     todoRepository,
+		userTagsRepository: userTagsRepository,
 	}
 }
 
@@ -48,6 +50,8 @@ func (t *Todo) Create(w http.ResponseWriter, r *http.Request) {
 		handleError(err, w, http.StatusInternalServerError, "Internal Error. Try later or check with admin.")
 		return
 	}
+
+	t.userTagsRepository.SetUserTags(todo.UserID, todo.Tags)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -124,13 +128,13 @@ func (t *Todo) Get(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("invoking get tasks for user %d in dates from %s to %s\n", userid, fromStr, toStr)
-
-		from, err := time.Parse(time.RFC3339, fromStr)
+		parseFormat := time.RFC3339
+		from, err := time.Parse(parseFormat, fromStr)
 		if err != nil {
 			handleError(err, w, http.StatusBadRequest, "error in parsing 'from' date")
 			return
 		}
-		to, err := time.Parse(time.RFC3339, toStr)
+		to, err := time.Parse(parseFormat, toStr)
 		if err != nil {
 			handleError(err, w, http.StatusBadRequest, "error in parsing 'to' date")
 			return
@@ -179,6 +183,8 @@ func (t *Todo) Update(w http.ResponseWriter, r *http.Request) {
 		handleError(err, w, http.StatusInternalServerError, "Internal Error. Try later or check with admin.")
 		return
 	}
+
+	t.userTagsRepository.SetUserTags(todo.UserID, todo.Tags)
 
 	w.WriteHeader(http.StatusOK)
 }

@@ -140,6 +140,71 @@ func (repo *Todo) Delete(userid int64, id int64) error {
 	return nil
 }
 
+func (repo *Todo) GetReport(userid int64, req model.ReportRequest) (model.ReportResponse, error) {
+	if req.From.After(req.To) {
+		return model.ReportResponse{}, fmt.Errorf("from date is later than to in request")
+	}
+
+	if req.GroupBy != "day" && req.GroupBy != "week" && req.GroupBy != "month" && req.GroupBy != "tags" {
+		return model.ReportResponse{}, fmt.Errorf("invalid group-by key in request: %s. Supported are day, week, month, tags", req.GroupBy)
+	}
+
+	if req.GroupBy == "tags" && len(req.Tags) <= 0 {
+		return model.ReportResponse{}, fmt.Errorf("no tags in request to group by tags")
+	}
+
+	if req.GroupBy == "tags" {
+		return repo.getGroupedByTags(userid, req)
+	}
+
+	query := `
+    select strftime('%Y-%m-%d', datetime(due, $1)) as day, sum(effort)
+    from todos
+    where userid = $2 and (due > $3 and due < $4)
+	group by day
+  `
+
+	if req.GroupBy == "week" {
+		query = `
+    select strftime('%W', datetime(due, $1)) as week, sum(effort)
+    from todos
+    where userid = $2 and (due > $3 and due < $4)
+	group by week
+  `
+	}
+
+	if req.GroupBy == "month" {
+		query = `
+    select strftime('%m', datetime(due, $1)) as month, sum(effort)
+    from todos
+    where userid = $2 and (due > $3 and due < $4)
+	group by month
+  `
+	}
+
+	offset := fmt.Sprintf("%d seconds", req.TimeZoneOffsetInSecs)
+	rows, err := repo.db.Query(query, offset, userid, req.From, req.To)
+	if err != nil {
+		return model.ReportResponse{}, err
+	}
+	defer rows.Close()
+
+	var res model.ReportResponse
+	res.ReportRequest = req
+	res.EffortsByGroup = map[string]float32{}
+	for rows.Next() {
+		var day string
+		var sum float32
+		err = rows.Scan(&day, &sum)
+		if err != nil {
+			return model.ReportResponse{}, err
+		}
+		res.EffortsByGroup[day] = sum
+	}
+
+	return res, nil
+}
+
 func getTodosFromRows(rows *sql.Rows) ([]model.Todo, error) {
 	todos := []model.Todo{}
 	for rows.Next() {
@@ -157,6 +222,48 @@ func getTodosFromRows(rows *sql.Rows) ([]model.Todo, error) {
 	}
 
 	return todos, nil
+}
+
+func (repo *Todo) getGroupedByTags(userid int64, req model.ReportRequest) (model.ReportResponse, error) {
+	query := `
+    select effort, tags
+    from todos
+    where userid = $1 and (due > $2 and due < $3)
+  `
+	rows, err := repo.db.Query(query, userid, req.From, req.To)
+	if err != nil {
+		return model.ReportResponse{}, err
+	}
+	defer rows.Close()
+
+	var res model.ReportResponse
+	res.ReportRequest = req
+	res.EffortsByGroup = map[string]float32{}
+	for rows.Next() {
+		var effort float32
+		var tagss string
+		err = rows.Scan(&effort, &tagss)
+		if err != nil {
+			return model.ReportResponse{}, err
+		}
+
+		tags := strings.Split(tagss, ";")
+		for _, tag := range tags {
+			var found bool = false
+			for _, reqTag := range req.Tags {
+				if reqTag == tag {
+					found = true
+					break
+				}
+			}
+
+			if found {
+				res.EffortsByGroup[tag] += effort
+			}
+		}
+	}
+
+	return res, err
 }
 
 var ErrInvalidTodo = errors.New("UserID, Effort and Due should not be empty")
