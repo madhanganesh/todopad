@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "prebuild": "rimraf ../api/public",
     "build": "rollup -c",
-    "postbuild": "cp -a ./public/. ../api/public",
     "dev": "rollup -c -w",
     "start": "sirv public --no-clear"
   },

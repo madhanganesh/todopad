@@ -36,7 +36,6 @@
   .summary .filter a {
     color: var(--magenta);
     margin-right: 5px;
-    text-decoration: solid;
   }
 
   .summary .count {
