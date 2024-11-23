@@ -3,3 +3,8 @@
 node_modules/
 web/public/build/
 api/api
+
+
+# Added by cargo
+
+/target
