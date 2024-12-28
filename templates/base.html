@@ -3,22 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todopad</title>
+    <title>todopad</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link href="/static/tailwind.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-100 text-gray-900">
     <header>
-        <h1>Todopad</h1>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/about">About</a>
-        </nav>
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-lg font-bold">
+                    <a href="/">todopad</a>
+                </div>
+
+                <nav class="hidden md:flex space-x-6">
+                    <a href="/">todos</a>
+                    <a href="/about">about</a>
+                    {% if let Some(user) = user %}
+                        <a href="/logout">logout</a>
+                    {% else %}
+                        <a href="/login">login</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
     </header>
+
     <main>
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
-    <footer>
-        <p>&copy; 2024 madhanganesh@gmail.com</p>
-    </footer>
 </body>
 </html>

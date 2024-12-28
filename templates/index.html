@@ -1,8 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Home Page{% endblock %}
-
 {% block content %}
-<h2>Welcome to the Home Page</h2>
-<p>This is content specific to the home page.</p>
+<div class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+    <form id="todo-form" class="flex items-center space-x-2 mb-4" hx-post="/todos" hx-trigger="submit" hx-target="#todo-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+      <input
+        type="text"
+        id="title"
+        name="title"
+        placeholder="Add a new todo..."
+        class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+        autofocus
+      />
+      <button
+        type="submit"
+        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-300"
+      >
+        Add
+      </button>
+    </form>
+
+<div class="mb-4">
+  {% if let Some(todos) = todos %}
+    {% include "partials/todos.html" %}
+  {%endif%}
+</div>
 {% endblock %}

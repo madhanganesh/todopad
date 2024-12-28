@@ -1,8 +1,66 @@
 {% extends "base.html" %}
 
-{% block title %}Home Page{% endblock %}
-
 {% block content %}
-<h2>Welcome to the About Page</h2>
-<p>This is content specific to the home page.</p>
+<main class="container mx-auto mt-8 px-6">
+    <section class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-3xl font-bold text-gray-800 mb-4">About TodoApp</h2>
+      <p class="text-gray-700 mb-4">
+        TodoApp is your ultimate productivity partner, designed to simplify your task management process. 
+        With intelligent features like automatic tagging and actionable data creation, 
+        TodoApp takes the stress out of managing your daily tasks.
+      </p>
+    </section>
+
+    <!-- Features Section -->
+    <section class="mt-8">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4">Key Features</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Feature 1 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h4 class="text-xl font-semibold text-blue-500 mb-2">Automatic Tagging</h4>
+          <p class="text-gray-700">
+            TodoApp automatically analyzes your tasks and assigns relevant tags, helping you stay 
+            organized without any manual effort.
+          </p>
+        </div>
+        <!-- Feature 2 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h4 class="text-xl font-semibold text-blue-500 mb-2">Data Insights</h4>
+          <p class="text-gray-700">
+            Generate actionable data and insights from your tasks. Visualize your progress and identify
+            trends to optimize your productivity.
+          </p>
+        </div>
+        <!-- Feature 3 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h4 class="text-xl font-semibold text-blue-500 mb-2">Customizable Views</h4>
+          <p class="text-gray-700">
+            Tailor the app to your needs with customizable views and filters, ensuring you focus on what matters most.
+          </p>
+        </div>
+        <!-- Feature 4 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h4 class="text-xl font-semibold text-blue-500 mb-2">Seamless Syncing</h4>
+          <p class="text-gray-700">
+            Sync your tasks across all your devices effortlessly, keeping your todo list updated no matter where you are.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="mt-12 text-center">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4">Get Started with TodoApp Today!</h3>
+      <p class="text-gray-700 mb-6">
+        Experience the future of task management and supercharge your productivity.
+      </p>
+      <a
+        href="/register"
+        class="bg-blue-500 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-blue-600 transition"
+      >
+        Sign Up Now
+      </a>
+    </section>
+  </main>
 {% endblock %}
+

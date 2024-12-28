@@ -1,0 +1,23 @@
+<li id="todo-{{ todo.id }}" class="flex items-center justify-between py-2 px-4 rounded-md hover:bg-gray-100"">
+        <div class="flex items-center">
+            <input
+                type="checkbox"
+                {% if todo.completed %}checked{% endif %}
+                hx-post="/todos/{{ todo.id }}/complete"
+                hx-trigger="change"
+                hx-target="#todo-{{ todo.id }}"
+                hx-swap="outerHTML"
+                class="w-5 h-5 mr-3 text-blue-500 focus:ring-blue-500 cursor-pointer"
+            >
+            <span class="{% if todo.completed %}line-through text-gray-500{% else %}text-gray-800{% endif %}">
+                {{ todo.title }}
+            </span>
+        </div>
+
+        {% if todo.due.is_some() %}
+        <span class="text-sm text-gray-500">
+            {{ todo.due.unwrap().format("%Y-%m-%d") }}
+        </span>
+        {% endif %}
+</li>
+
