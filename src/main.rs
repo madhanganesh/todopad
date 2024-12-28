@@ -40,7 +40,7 @@ async fn main() {
 
     // Load the appropriate .env file
     match environment.as_str() {
-        "release" => from_filename(".env").ok(),
+        "release" => from_filename(".env.release").ok(),
         _ => from_filename(".env").ok(),
     };
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
