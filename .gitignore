@@ -1,6 +1,5 @@
 .DS_Store
 *.sqlite
-*.db*
 node_modules/
 web/public/build/
 api/api
