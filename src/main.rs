@@ -3,7 +3,7 @@ mod models;
 mod handlers;
 mod repo;
 
-use dotenv::dotenv;
+use dotenv::from_filename;
 use std::env;
 use std::process::exit;
 use std::str::FromStr;
@@ -30,9 +30,23 @@ pub struct AppState {
 async fn main() {
     tracing_subscriber::fmt::init();
     
-    dotenv().ok();
+    /*dotenv().ok();
     let environment = env::var("ENVIRONMENT").unwrap_or_else(|_| "production".to_string());
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");*/
+
+    // Determine the environment
+    let environment = env::var("PROFILE").unwrap_or_else(|_| "development".to_string());
+
+    // Load the appropriate .env file
+    match environment.as_str() {
+        "release" => from_filename(".env.release").ok(),
+        _ => from_filename(".env").ok(),
+    };
+     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    println!("APP_ENV: {}", environment);
+    println!("DATABASE_URL: {}", database_url);
+    println!("SQLX_OFFLINE is set to: {}", env::var("SQLX_OFFLINE").unwrap());
 
     let pool = match get_db(&environment, &database_url).await {
         Ok(pool) => pool,
