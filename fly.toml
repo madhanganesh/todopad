@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for todopad on 2024-11-23T17:32:11Z
+# fly.toml app configuration file generated for todopad on 2024-12-28T13:04:41+05:30
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,6 +7,10 @@ app = 'todopad'
 primary_region = 'sin'
 
 [build]
+
+[[mounts]]
+  source = 'app_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
@@ -21,7 +25,3 @@ primary_region = 'sin'
   cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
-
-[mounts]
-  source = "app_data"
-  destination = "/data"
