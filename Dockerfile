@@ -16,4 +16,5 @@ COPY static /app/static
 COPY .env /app/.env
 
 EXPOSE 8080
+ENV APP_ENV=release
 CMD ["/app/todopad"]

@@ -35,7 +35,7 @@ async fn main() {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");*/
 
     // Determine the environment
-    let environment = env::var("PROFILE").unwrap_or_else(|_| "development".to_string());
+    let environment = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
 
     // Load the appropriate .env file
     match environment.as_str() {
