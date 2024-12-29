@@ -3,7 +3,6 @@ mod models;
 mod handlers;
 mod repo;
 
-use dotenv::from_filename;
 use std::env;
 use std::process::exit;
 use std::str::FromStr;
@@ -11,6 +10,7 @@ use std::sync::Arc;
 use axum::{
     middleware, routing::{get, post}, Router
 };
+use dotenv::dotenv;
 use tower_http::services::ServeDir;
 use sqlx::Executor;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
@@ -30,20 +30,8 @@ pub struct AppState {
 async fn main() {
     tracing_subscriber::fmt::init();
     
-    /*dotenv().ok();
-    let environment = env::var("ENVIRONMENT").unwrap_or_else(|_| "production".to_string());
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");*/
-
-    // Determine the environment
-    let environment = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
-    println!("APP_ENV: {}", environment);
-
-    // Load the appropriate .env file
-    match environment.as_str() {
-        //"release" => from_filename(".env.release").ok(),
-        "release" => from_filename(".env").ok(),
-        _ => from_filename(".env").ok(),
-    };
+    dotenv().ok();
+    let environment = env::var("ENV").expect("ENV must be set");
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     println!("DATABASE_URL: {}", database_url);
     println!("SQLX_OFFLINE is set to: {}", env::var("SQLX_OFFLINE").unwrap());
