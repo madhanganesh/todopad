@@ -1,6 +1,7 @@
 <li id="todo-{{ todo.id }}" class="flex items-center justify-between py-2 px-4 rounded-md hover:bg-gray-100"">
         <div class="flex items-center">
             <input
+                id="completed-{{todo.id}}"
                 type="checkbox"
                 {% if todo.completed %}checked{% endif %}
                 hx-post="/todos/{{ todo.id }}/toggle"

@@ -21,6 +21,14 @@
       </button>
     </form>
 
+    <div>
+        <select name="filter" hx-get="/todos" hx-target="#todo-list" hx-swap="innerHTML">
+            <option value="pending">Pending</option>
+            <option value="today">Today</option>
+            <option value="tomorrow">Tomorrow</option>
+        </select>
+    </div>
+    
 <div class="mb-4">
   {% if let Some(todos) = todos %}
     {% include "partials/todos.html" %}

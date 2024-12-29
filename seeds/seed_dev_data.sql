@@ -11,8 +11,9 @@ INSERT OR IGNORE INTO tags (id, name) VALUES
 
 -- Seed todos
 INSERT OR IGNORE INTO todos (id, user_id, title, due, completed, notes) VALUES
-(1, 'admin', 'Complete project', '2024-12-31', 0, 'Finish before New Year'),
-(2, 'madhan', 'Buy groceries', '2024-12-26', 0, 'Get milk, eggs, and bread');
+(1, 'admin', 'Complete project', '2024-12-29', 0, 'Finish before New Year'),
+(1, 'admin', 'Complete project', '2024-12-30', 0, 'for tomorrow'),
+(2, 'madhan', 'Buy groceries', '2024-12-30', 0, 'Get milk, eggs, and bread');
 
 -- Seed relationships
 INSERT OR IGNORE INTO todo_tags (todo_id, tag_id) VALUES

@@ -1,10 +1,16 @@
-use sqlx::{pool, query_as, SqlitePool};
+use chrono::NaiveDate;
+use sqlx::{query_as, SqlitePool};
 
 use crate::models::Todo;
 
-
 pub async fn get_pending_todos(pool: &SqlitePool, user_id: &str) -> Result<Vec<Todo>, sqlx::Error> {
     query_as!(Todo, "SELECT * FROM todos WHERE user_id = ? AND completed = false", user_id)
+        .fetch_all(pool)
+        .await
+}
+
+pub async fn get_todos_for_date(pool: &SqlitePool, user_id: &str, date: &NaiveDate) -> Result<Vec<Todo>, sqlx::Error> {
+    query_as!(Todo, "SELECT * FROM todos WHERE user_id = ? AND due = ?", user_id, date)
         .fetch_all(pool)
         .await
 }
