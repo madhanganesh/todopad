@@ -50,22 +50,27 @@ pub async fn login_handler(State(pool): State<Arc<SqlitePool>>, Form(form): Form
         if verify_password(&row.hashed_password, &form.password) {
             let expiration = chrono::Utc::now()
                 .checked_add_signed(chrono::Duration::days(365))
-                .unwrap()
-                .timestamp() as usize;
+                .unwrap();
 
             let claims = Claims {
                 sub: form.username.clone(),
-                exp: expiration,
+                exp: expiration.timestamp() as usize,
             };
 
             let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(SECRET))
                 .expect("Failed to encode JWT");
 
+            let cookie = format!(
+                "auth_token={}; HttpOnly; Path=/; Expires={}",
+                token,
+                expiration.to_rfc2822(),
+            );
+
             return Response::builder()
                 .status(StatusCode::FOUND)
                 .header(
                     header::SET_COOKIE,
-                    HeaderValue::from_str(&format!("auth_token={}; HttpOnly; Path=/", token)).unwrap(),
+                    HeaderValue::from_str(&cookie).unwrap(),
                 )
                 .header(header::LOCATION, HeaderValue::from_static("/"))
                 .body(axum::body::Body::empty())

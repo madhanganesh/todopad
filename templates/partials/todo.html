@@ -19,5 +19,12 @@
             {{ todo.due.unwrap().format("%Y-%m-%d") }}
         </span>
         {% endif %}
+
+        <button
+                hx-delete="/todos/{{ todo.id }}"
+                hx-target="#todo-{{ todo.id }}"
+                hx-swap="outerHTML">
+                Delete
+        </button>
 </li>
 

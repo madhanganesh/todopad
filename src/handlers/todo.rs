@@ -29,10 +29,10 @@ pub async fn create_todo(
     match repo::create_todo(&pool, &user.user_id, &form.title).await {
         Ok(todo) => {
             let template = TodoTemplate { todo: &todo };
-            return super::HtmlTemplate(template).into_response();
+            super::HtmlTemplate(template).into_response()
         }
         Err(_) => {
-            return Html("<p>Error creating todo</p>".to_string()).into_response();
+            Html("<p>Error creating todo</p>".to_string()).into_response()
         }
     }
 }

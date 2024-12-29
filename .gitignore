@@ -1,4 +1,5 @@
-*.env*
+*.env
+todopad.db
 .DS_Store
 *.sqlite
 node_modules/

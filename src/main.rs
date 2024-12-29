@@ -33,6 +33,7 @@ async fn main() {
     dotenv().ok();
     let environment = env::var("ENV").expect("ENV must be set");
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    println!("ENV: {}", environment);
     println!("DATABASE_URL: {}", database_url);
     println!("SQLX_OFFLINE is set to: {}", env::var("SQLX_OFFLINE").unwrap());
 
@@ -75,10 +76,10 @@ async fn get_db(environment: &str, database_url: &str) -> Result<SqlitePool, sql
     sqlx::migrate!("./migrations").run(&pool).await?;
     println!("Migrations applied");
 
-    //if environment == "development" {
+    if environment == "development" {
         seed_dev_data(&pool).await?;
         println!("Development seed data applied");
-    //}
+    }
 
     Ok(pool)
 }

@@ -25,3 +25,7 @@ pub async fn create_todo(pool: &SqlitePool, user_id: &str, title: &str) -> Resul
 
     Ok(todo)
 }
+
+pub async fn delete_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<(), sqlx::Error> {
+    Ok(())
+}
