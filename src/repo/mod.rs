@@ -1,4 +1,4 @@
-use sqlx::{query_as, SqlitePool};
+use sqlx::{pool, query_as, SqlitePool};
 
 use crate::models::Todo;
 
@@ -28,6 +28,14 @@ pub async fn create_todo(pool: &SqlitePool, user_id: &str, title: &str) -> Resul
 
 pub async fn delete_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<(), sqlx::Error> {
     query_as!(Todo, "DELETE from todos where user_id=? and id=?", user_id, todo_id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
+pub async fn toggle_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<(), sqlx::Error> {
+    query_as!(Todo, "UPDATE todos SET completed = NOT completed where user_id=? and id=?", user_id, todo_id)
         .execute(pool)
         .await?;
 

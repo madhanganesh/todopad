@@ -3,7 +3,7 @@
             <input
                 type="checkbox"
                 {% if todo.completed %}checked{% endif %}
-                hx-post="/todos/{{ todo.id }}/complete"
+                hx-post="/todos/{{ todo.id }}/toggle"
                 hx-trigger="change"
                 hx-target="#todo-{{ todo.id }}"
                 hx-swap="outerHTML"

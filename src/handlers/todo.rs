@@ -5,7 +5,7 @@ use askama::Template;
 use axum::{extract::{Path, State}, response::{Html, IntoResponse, Response}, Extension, Form};
 use hyper::StatusCode;
 use serde::Deserialize;
-use sqlx::{query, query_as, Pool, Sqlite, SqlitePool};
+use sqlx::SqlitePool;
 
 // Assuming the Todo struct is defined in the same module or needs to be imported
 use crate::{models::Todo, repo};
@@ -44,6 +44,17 @@ pub async fn delete_todo(
     Path(id): Path<i64>,
 ) -> StatusCode {
     match repo::delete_todo(&pool, &user.user_id, id).await {
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+pub async fn toggle_todo(
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>,
+    Path(id): Path<i64>,
+) -> StatusCode {
+    match repo::toggle_todo(&pool, &user.user_id, id).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
