@@ -27,5 +27,9 @@ pub async fn create_todo(pool: &SqlitePool, user_id: &str, title: &str) -> Resul
 }
 
 pub async fn delete_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<(), sqlx::Error> {
+    query_as!(Todo, "DELETE from todos where user_id=? and id=?", user_id, todo_id)
+        .execute(pool)
+        .await?;
+
     Ok(())
 }

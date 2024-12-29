@@ -8,7 +8,7 @@ use std::process::exit;
 use std::str::FromStr;
 use std::sync::Arc;
 use axum::{
-    middleware, routing::{get, post}, Router
+    middleware, routing::{delete, get, post}, Router
 };
 use dotenv::dotenv;
 use tower_http::services::ServeDir;
@@ -18,7 +18,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use handlers::index::index;
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler};
-use handlers::todo::create_todo;
+use handlers::todo::{create_todo, delete_todo};
 use handlers::auth::auth_middleware;
 
 #[derive(Clone)]
@@ -56,6 +56,7 @@ async fn main() {
 
     let auth_routes = Router::new()
         .route("/todos", post(create_todo))
+        .route("/todos/:id", delete(delete_todo))
         .route_layer(middleware::from_fn(auth_middleware));
 
     let routes = public_routes

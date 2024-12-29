@@ -1,5 +1,7 @@
 *.env
 todopad.db
+*.db-shm
+*.db-wal
 .DS_Store
 *.sqlite
 node_modules/

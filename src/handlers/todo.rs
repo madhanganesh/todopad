@@ -2,7 +2,8 @@
 use std::sync::Arc;
 
 use askama::Template;
-use axum::{extract::State, response::{Html, IntoResponse, Response}, Extension, Form};
+use axum::{extract::{Path, State}, response::{Html, IntoResponse, Response}, Extension, Form};
+use hyper::StatusCode;
 use serde::Deserialize;
 use sqlx::{query, query_as, Pool, Sqlite, SqlitePool};
 
@@ -34,5 +35,16 @@ pub async fn create_todo(
         Err(_) => {
             Html("<p>Error creating todo</p>".to_string()).into_response()
         }
+    }
+}
+
+pub async fn delete_todo(
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>,
+    Path(id): Path<i64>,
+) -> StatusCode {
+    match repo::delete_todo(&pool, &user.user_id, id).await {
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
