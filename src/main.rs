@@ -18,7 +18,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use handlers::index::index;
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler};
-use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos};
+use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo};
 use handlers::auth::auth_middleware;
 
 #[derive(Clone)]
@@ -59,6 +59,7 @@ async fn main() {
         .route("/todos", get(get_todos))
         .route("/todos/:id", delete(delete_todo))
         .route("/todos/:id/toggle", post(toggle_todo))
+        .route("/todos/:id/tags", get(get_tags_for_todo))
         .route_layer(middleware::from_fn(auth_middleware));
 
     let routes = public_routes

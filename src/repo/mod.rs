@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use sqlx::{query_as, SqlitePool};
 
-use crate::models::Todo;
+use crate::models::{Todo, Tag};
 
 pub async fn get_pending_todos(pool: &SqlitePool, user_id: &str) -> Result<Vec<Todo>, sqlx::Error> {
     query_as!(Todo, "SELECT * FROM todos WHERE user_id = ? AND completed = false", user_id)
@@ -46,4 +46,41 @@ pub async fn toggle_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Resu
         .await?;
 
     Ok(())
+}
+
+pub async fn save_tags(pool: &SqlitePool, user_id: &str, todo_id: i64, tags: Vec<String>) -> Result<(), sqlx::Error> {
+    for tag in &tags {
+        query_as!(Tag,
+            r#"
+            INSERT INTO tags (user_id, todo_id, tag)
+            VALUES (?, ?, ?)
+            ON CONFLICT(user_id, todo_id, tag) DO NOTHING
+            "#,
+            user_id,
+            todo_id,
+            tag
+        )
+        .execute(pool)
+        .await?;
+    }
+
+    Ok(())
+}
+
+pub async fn get_tags_for_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<Vec<String>, sqlx::Error> {
+
+    let tags = query_as!(Tag, 
+        r#"select user_id, todo_id, tag 
+        from tags 
+        where user_id = ? and todo_id = ?
+        "#, 
+        user_id, 
+        todo_id)
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| r.tag)
+    .collect();
+
+    Ok(tags)
 }

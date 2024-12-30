@@ -27,5 +27,39 @@
                 hx-swap="outerHTML">
                 Delete
         </button>
+
+        <div class="inline-block relative">
+      <i
+        class="tag-icon ml-4 text-gray-500 cursor-pointer"
+        hx-get="/todos/{{todo.id}}/tags"
+        hx-trigger="mouseover"
+        hx-target="#tags-popup-{{todo.id}}"
+        hx-swap="innerHTML"
+      >
+        🏷️
+      </i>
+      <div
+        id="tags-popup-{{todo.id}}"
+        class="absolute left-0 mt-2 p-2 bg-white border border-gray-200 rounded-md shadow-lg hidden"
+        hx-get="/todos/100000/tags"
+hx-trigger="mouseleave"
+        hx-swap="innerHTML"
+      >
+        <!-- Tags will be dynamically loaded here -->
+      </div>
+    </div>
 </li>
+
+<script>
+  document.addEventListener("htmx:afterSwap", (event) => {
+    const target = event.detail.target;
+
+    // Hide the popup if the response content is empty
+    if (target.innerHTML.trim() === "") {
+      target.classList.add("hidden");
+    } else {
+      target.classList.remove("hidden");
+    }
+  });
+</script>
 

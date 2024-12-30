@@ -1,4 +1,4 @@
-use chrono::{NaiveDate};
+use chrono::NaiveDate;
 use serde::Serialize;
 use sqlx::FromRow;
 
@@ -20,18 +20,7 @@ pub struct Todo {
 
 #[derive(Serialize, FromRow)]
 pub struct Tag {
-    id: i32,
-    name: String,
-}
-
-#[derive(Serialize, FromRow)]
-struct TodoTag {
-    todo_id: i32,
-    tag_id: i32,
-}
-
-#[derive(Serialize, FromRow)]
-pub struct UserTag {
-    user_id: i32,
-    tag_id: i32,
+    pub user_id: String,
+    pub todo_id: i64,
+    pub tag: String,
 }
