@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y ca-certificates
 WORKDIR /app
 COPY --from=builder /app/target/release/todopad /app/todopad
 COPY migrations /app/migrations
-COPY seeds /app/seeds
 COPY static /app/static
 
 EXPOSE 8080
