@@ -8,6 +8,7 @@ RUN cargo build --release
 # Final run stage
 FROM debian:bookworm-slim AS runner
 RUN apt-get update && apt-get install -y libssl3 && apt-get clean
+RUN apt-get update && apt-get install -y ca-certificates
  
 WORKDIR /app
 COPY --from=builder /app/target/release/todopad /app/todopad
