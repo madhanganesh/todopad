@@ -1,8 +1,8 @@
 pub mod about;
+pub mod auth;
 pub mod index;
 pub mod login;
 pub mod todo;
-pub mod auth;
 
 use askama::Template;
 use axum::{
@@ -15,15 +15,14 @@ const SECRET: &[u8] = b"my_secret_key";
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
-    sub: String,
+    sub: i64,
     exp: usize,
 }
 
 #[derive(Clone)]
-pub struct CurrentUser { 
-    user_id: String
+pub struct CurrentUser {
+    user_id: i64,
 }
-
 
 struct HtmlTemplate<T>(T);
 

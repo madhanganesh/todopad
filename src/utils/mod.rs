@@ -1,5 +1,7 @@
 pub mod tags;
 
+use anyhow::{Error, Result};
+
 use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
@@ -14,27 +16,18 @@ pub fn verify_password(hash: &str, plain: &str) -> bool {
         }
     };
 
-    let argon2 = Argon2::default();
-    argon2
+    Argon2::default()
         .verify_password(plain.as_bytes(), &parsed_hash)
         .is_ok()
 }
 
-#[allow(dead_code)]
-fn hash_password1(password: &str) {
-    // Generate a random salt
+pub fn hash_password(password: &str) -> Result<String> {
     let salt = SaltString::generate(&mut OsRng);
-    // Create the Argon2 instance with default parameters
     let argon2 = Argon2::default();
-    // Hash the password
     let password_hash = argon2
         .hash_password(password.as_bytes(), &salt)
-        .unwrap()
+        .map_err(|e| Error::msg(format!("Password hashing failed: {}", e)))?
         .to_string();
 
-    println!("Hashed password: {}", password_hash);
-
-    // Verify the password
-    //let parsed_hash = PasswordHash::new(&password_hash).unwrap();
-    //let is_valid = argon2.verify_password(password.as_bytes(), &parsed_hash).is_ok();
+    Ok(password_hash)
 }

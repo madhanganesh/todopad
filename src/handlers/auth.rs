@@ -1,18 +1,14 @@
 use axum::{
-    Router,
     http::StatusCode,
-    routing::get,
-    response::{IntoResponse, Response},
-    middleware::{self, Next},
-    extract::{Request, Extension},
+    response::Response,
+    middleware::Next,
+    extract::Request,
 };
 use headers::{HeaderMapExt, Cookie};
-use hyper::{HeaderMap};
-use sqlx::SqlitePool;
+use hyper::HeaderMap;
 use jsonwebtoken::{decode, DecodingKey, Validation, TokenData};
-use serde::{Deserialize, Serialize};
 
-use super::{Claims, CurrentUser, SECRET};
+use super::{Claims, SECRET};
 
 pub async fn auth_middleware(mut req: Request, next: Next) -> Result<Response, StatusCode> {
     /*if let Ok(user_id) = validate_cookie(&req).await {
@@ -35,7 +31,7 @@ pub async fn auth_middleware(mut req: Request, next: Next) -> Result<Response, S
     Err(StatusCode::UNAUTHORIZED)
 }
 
-pub async fn validate_cookie(headers: &HeaderMap) -> Result<String, StatusCode> {
+pub async fn validate_cookie(headers: &HeaderMap) -> Result<i64, StatusCode> {
 //pub async fn validate_cookie(req: &Request) -> Result<String, StatusCode> {
     //let headers: &HeaderMap = req.headers();
 

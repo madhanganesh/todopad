@@ -1,21 +1,50 @@
 use chrono::NaiveDate;
-use sqlx::{query_as, SqlitePool};
+use sqlx::{query_as, sqlite::SqliteError, SqlitePool, Error as SqlxError};
+use thiserror::Error;
 
-use crate::models::{Todo, Tag};
+use crate::models::{Tag, Todo, User};
 
-pub async fn get_pending_todos(pool: &SqlitePool, user_id: &str) -> Result<Vec<Todo>, sqlx::Error> {
+#[derive(Debug, Error)]
+pub enum RegisterError {
+    #[error("User already exists")]
+    UserAlreadyExists,
+
+    #[error("Database error")]
+    DatabaseError(#[from] sqlx::Error),
+}  
+
+pub async fn register_user(pool: &SqlitePool, email: &String, password_hash: &String) -> Result<i64, RegisterError> {
+    let result = query_as!(User, "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+        email,
+        password_hash
+    )
+    .execute(pool)
+    .await
+    .map_err(map_sqlx_error)?;
+
+    let last_insert_id = result.last_insert_rowid();
+    Ok(last_insert_id)
+}
+
+pub async fn get_user_from_email(pool: &SqlitePool, email: &String) -> Result<User, sqlx::Error> {
+    query_as!(User, "SELECT id, email, password_hash from users WHERE email=?", email)
+        .fetch_one(pool)
+        .await
+}
+
+pub async fn get_pending_todos(pool: &SqlitePool, user_id: i64) -> Result<Vec<Todo>, sqlx::Error> {
     query_as!(Todo, "SELECT * FROM todos WHERE user_id = ? AND completed = false", user_id)
         .fetch_all(pool)
         .await
 }
 
-pub async fn get_todos_for_date(pool: &SqlitePool, user_id: &str, date: &NaiveDate) -> Result<Vec<Todo>, sqlx::Error> {
+pub async fn get_todos_for_date(pool: &SqlitePool, user_id: i64, date: &NaiveDate) -> Result<Vec<Todo>, sqlx::Error> {
     query_as!(Todo, "SELECT * FROM todos WHERE user_id = ? AND due = ?", user_id, date)
         .fetch_all(pool)
         .await
 }
 
-pub async fn create_todo(pool: &SqlitePool, user_id: &str, title: &str) -> Result<Todo, sqlx::Error> {
+pub async fn create_todo(pool: &SqlitePool, user_id: i64, title: &str) -> Result<Todo, sqlx::Error> {
     let result = query_as!(Todo, "INSERT INTO todos (user_id, title) VALUES (?, ?)", user_id, title)
         .execute(pool)
         .await?;
@@ -32,7 +61,7 @@ pub async fn create_todo(pool: &SqlitePool, user_id: &str, title: &str) -> Resul
     Ok(todo)
 }
 
-pub async fn delete_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<(), sqlx::Error> {
+pub async fn delete_todo(pool: &SqlitePool, user_id: i64, todo_id: i64) -> Result<(), sqlx::Error> {
     query_as!(Todo, "DELETE from todos where user_id=? and id=?", user_id, todo_id)
         .execute(pool)
         .await?;
@@ -40,7 +69,7 @@ pub async fn delete_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Resu
     Ok(())
 }
 
-pub async fn toggle_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<(), sqlx::Error> {
+pub async fn toggle_todo(pool: &SqlitePool, user_id: i64, todo_id: i64) -> Result<(), sqlx::Error> {
     query_as!(Todo, "UPDATE todos SET completed = NOT completed where user_id=? and id=?", user_id, todo_id)
         .execute(pool)
         .await?;
@@ -48,7 +77,7 @@ pub async fn toggle_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Resu
     Ok(())
 }
 
-pub async fn save_tags(pool: &SqlitePool, user_id: &str, todo_id: i64, tags: Vec<String>) -> Result<(), sqlx::Error> {
+pub async fn save_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, tags: Vec<String>) -> Result<(), sqlx::Error> {
     for tag in &tags {
         query_as!(Tag,
             r#"
@@ -67,7 +96,7 @@ pub async fn save_tags(pool: &SqlitePool, user_id: &str, todo_id: i64, tags: Vec
     Ok(())
 }
 
-pub async fn get_tags_for_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -> Result<Vec<String>, sqlx::Error> {
+pub async fn get_tags_for_todo(pool: &SqlitePool, user_id: i64, todo_id: i64) -> Result<Vec<String>, sqlx::Error> {
 
     let tags = query_as!(Tag, 
         r#"select user_id, todo_id, tag 
@@ -83,4 +112,13 @@ pub async fn get_tags_for_todo(pool: &SqlitePool, user_id: &str, todo_id: i64) -
     .collect();
 
     Ok(tags)
+}
+
+fn map_sqlx_error(err: SqlxError) -> RegisterError {
+    if let SqlxError::Database(db_err) = &err {
+        if db_err.message().contains("UNIQUE constraint failed") {
+            return RegisterError::UserAlreadyExists;
+        }
+    }
+    RegisterError::DatabaseError(err)
 }

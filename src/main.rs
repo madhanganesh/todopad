@@ -12,12 +12,11 @@ use axum::{
 };
 use dotenv::dotenv;
 use tower_http::services::ServeDir;
-use sqlx::Executor;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 
 use handlers::index::index;
 use handlers::about::about;
-use handlers::login::{login_page, login_handler, logout_handler};
+use handlers::login::{login_page, login_handler, logout_handler, register_page, register_handler};
 use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo};
 use handlers::auth::auth_middleware;
 
@@ -37,7 +36,7 @@ async fn main() {
     println!("DATABASE_URL: {}", database_url);
     println!("SQLX_OFFLINE is set to: {}", env::var("SQLX_OFFLINE").unwrap());
 
-    let pool = match get_db(&environment, &database_url).await {
+    let pool = match get_db(&database_url).await {
         Ok(pool) => pool,
         Err(err) => {
             println!("Error connection to DB: {:?}", err);
@@ -52,6 +51,8 @@ async fn main() {
         .route("/login", get(login_page))
         .route("/login", post(login_handler))
         .route("/logout", get(logout_handler))
+        .route("/register", get(register_page))
+        .route("/register", post(register_handler))
         .nest_service("/static", ServeDir::new("static"));
 
     let auth_routes = Router::new()
@@ -71,7 +72,7 @@ async fn main() {
     axum::serve(listener, routes).await.unwrap();
 }
 
-async fn get_db(environment: &str, database_url: &str) -> Result<SqlitePool, sqlx::Error> {
+async fn get_db(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
     let options = SqliteConnectOptions::from_str(database_url)?
         .create_if_missing(true)
         .foreign_keys(true);
@@ -80,16 +81,11 @@ async fn get_db(environment: &str, database_url: &str) -> Result<SqlitePool, sql
     sqlx::migrate!("./migrations").run(&pool).await?;
     println!("Migrations applied");
 
-    //if environment == "development" {
-        seed_dev_data(&pool).await?;
-        println!("Development seed data applied");
-    //}
-
     Ok(pool)
 }
 
-async fn seed_dev_data(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+/*async fn seed_dev_data(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     let seed_script = include_str!("../seeds/seed_dev_data.sql");
     pool.execute(seed_script).await?;
     Ok(())
-}
+}*/

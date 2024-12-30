@@ -28,7 +28,7 @@ pub async fn create_todo(
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>, 
     Form(form): Form<TodoInputForm>) -> Response {
-    match repo::create_todo(&pool, &user.user_id, &form.title).await {
+    match repo::create_todo(&pool, user.user_id, &form.title).await {
         Ok(todo) => {
             let template = TodoTemplate { todo: &todo };
 
@@ -36,12 +36,12 @@ pub async fn create_todo(
             match gemini_api_key {
                 Ok(api_key) => {
                     let todo_id = todo.id;
-                    let user_id = user.user_id.clone();
+                    let user_id = user.user_id;
                     let title = todo.title.clone();
                     let pool_clone = Arc::clone(&pool);
                     tokio::spawn(async move {
                         let tags = get_tags(&api_key, &title).await;
-                    _ = save_tags(&pool_clone, &user_id, todo_id, tags).await;
+                    _ = save_tags(&pool_clone, user_id, todo_id, tags).await;
                     });
                 },
                 Err(_) => {
@@ -77,10 +77,10 @@ pub async fn get_todos(
     let tomorrow = today.succ_opt().unwrap();
 
     let todos = match filter {
-        "pending" => get_pending_todos(&pool, &user.user_id).await.unwrap(),
-        "today" => get_todos_for_date(&pool, &user.user_id, &today).await.unwrap(),
-        "tomorrow" => get_todos_for_date(&pool, &user.user_id, &tomorrow).await.unwrap(),
-        _ =>  get_pending_todos(&pool, &user.user_id).await.unwrap(),
+        "pending" => get_pending_todos(&pool, user.user_id).await.unwrap(),
+        "today" => get_todos_for_date(&pool, user.user_id, &today).await.unwrap(),
+        "tomorrow" => get_todos_for_date(&pool, user.user_id, &tomorrow).await.unwrap(),
+        _ =>  get_pending_todos(&pool, user.user_id).await.unwrap(),
     };
 
     let template = TodosTemplate { todos };
@@ -92,7 +92,7 @@ pub async fn delete_todo(
     State(pool): State<Arc<SqlitePool>>,
     Path(id): Path<i64>,
 ) -> StatusCode {
-    match repo::delete_todo(&pool, &user.user_id, id).await {
+    match repo::delete_todo(&pool, user.user_id, id).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
@@ -103,7 +103,7 @@ pub async fn toggle_todo(
     State(pool): State<Arc<SqlitePool>>,
     Path(id): Path<i64>,
 ) -> StatusCode {
-    match repo::toggle_todo(&pool, &user.user_id, id).await {
+    match repo::toggle_todo(&pool, user.user_id, id).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
@@ -114,7 +114,7 @@ pub async fn get_tags_for_todo(
     State(pool): State<Arc<SqlitePool>>, 
     Path(id): Path<i64>,  
 ) -> Result<Json<Vec<String>>, axum::response::Response> {
-    match repo::get_tags_for_todo(&pool, &user.user_id, id).await {
+    match repo::get_tags_for_todo(&pool, user.user_id, id).await {
         Ok(tags) => Ok(Json(tags)), // Return tags as JSON
         Err(err) => {
             eprintln!("Error fetching tags: {:?}", err);
