@@ -80,10 +80,10 @@ async fn get_db(environment: &str, database_url: &str) -> Result<SqlitePool, sql
     sqlx::migrate!("./migrations").run(&pool).await?;
     println!("Migrations applied");
 
-    if environment == "development" {
+    //if environment == "development" {
         seed_dev_data(&pool).await?;
         println!("Development seed data applied");
-    }
+    //}
 
     Ok(pool)
 }
