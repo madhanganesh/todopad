@@ -7,13 +7,13 @@ RUN cargo build --release
  
 # Final run stage
 FROM debian:bookworm-slim AS runner
+RUN apt-get update && apt-get install -y libssl3 && apt-get clean
  
 WORKDIR /app
 COPY --from=builder /app/target/release/todopad /app/todopad
 COPY migrations /app/migrations
 COPY seeds /app/seeds
 COPY static /app/static
-COPY .env /app/.env
 
 EXPOSE 8080
 CMD ["/app/todopad"]
