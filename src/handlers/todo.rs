@@ -75,10 +75,12 @@ pub async fn get_todos(
 
     let today = Utc::now().naive_utc().date();
     let tomorrow = today.succ_opt().unwrap();
+    let yesterday = today.pred_opt().unwrap();
 
     let todos = match filter {
         "pending" => get_pending_todos(&pool, user.user_id).await.unwrap(),
         "today" => get_todos_for_date(&pool, user.user_id, &today).await.unwrap(),
+        "yesterday" => get_todos_for_date(&pool, user.user_id, &yesterday).await.unwrap(),
         "tomorrow" => get_todos_for_date(&pool, user.user_id, &tomorrow).await.unwrap(),
         _ =>  get_pending_todos(&pool, user.user_id).await.unwrap(),
     };
