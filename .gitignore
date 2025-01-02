@@ -1,4 +1,4 @@
-*.env
+.env
 todopad.db
 *.db-shm
 *.db-wal
