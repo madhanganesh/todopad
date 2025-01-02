@@ -32,20 +32,24 @@ pub async fn create_todo(
         Ok(todo) => {
             let template = TodoTemplate { todo: &todo };
 
-            let gemini_api_key = env::var("GEMINI_API_KEY");
-            match gemini_api_key {
+            let openai_api_key = env::var("OPENAI_API_KEY");
+            match openai_api_key {
                 Ok(api_key) => {
                     let todo_id = todo.id;
                     let user_id = user.user_id;
                     let title = todo.title.clone();
                     let pool_clone = Arc::clone(&pool);
                     tokio::spawn(async move {
-                        let tags = get_tags(&api_key, &title).await;
-                    _ = save_tags(&pool_clone, user_id, todo_id, tags).await;
+                        match get_tags(&api_key, &title).await {
+                            Ok(tags) => {
+                                 _ = save_tags(&pool_clone, user_id, todo_id, tags).await;
+                            }
+                            Err(err) => eprintln!("Error: {:?}", err),
+                        }
                     });
                 },
                 Err(_) => {
-                    println!("GEMINI_API_KEY is not set so tags are not idetified");
+                    println!("OPENAI_API_KEY is not set so tags are not idetified");
                 }
             }
 
