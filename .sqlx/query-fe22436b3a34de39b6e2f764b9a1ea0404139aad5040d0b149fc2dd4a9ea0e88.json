@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "select user_id, todo_id, tag \n        from tags \n        where user_id = ? and todo_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "todo_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "tag",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fe22436b3a34de39b6e2f764b9a1ea0404139aad5040d0b149fc2dd4a9ea0e88"
+}

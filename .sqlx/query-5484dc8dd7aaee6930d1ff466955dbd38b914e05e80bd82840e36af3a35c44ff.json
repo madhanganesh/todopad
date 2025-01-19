@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE from todos where user_id=? and id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "5484dc8dd7aaee6930d1ff466955dbd38b914e05e80bd82840e36af3a35c44ff"
+}
