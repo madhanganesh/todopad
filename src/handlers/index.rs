@@ -6,36 +6,31 @@ use axum::{
 
 use sqlx::SqlitePool;
 
-use crate::{models::Todo, repo};
+use super::{AboutTemplate, BaseTemplate, HtmlTemplate};
 use super::auth::validate_cookie;
+use crate::{models::Todo, repo};
 
 
 #[derive(Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {
-    user: Option<i64>,
+    base: BaseTemplate,
     todos: Option<Vec<Todo>>,
-}
-
-
-#[derive(Template)]
-#[template(path = "about.html")]
-struct AboutTemplate {
-    user: Option<i64>,
 }
 
 pub async fn index(headers: HeaderMap, State(pool): State<Arc<SqlitePool>>) -> Response {
    if let Ok(user_id) = validate_cookie(&headers).await {
         let todos = repo::get_pending_todos(&pool, user_id).await.unwrap();
         let template = IndexTemplate {
-            user: Some(user_id),
+            base: BaseTemplate::new(headers).await,
             todos: Some(todos),
         };
-        return super::HtmlTemplate(template).into_response();
+        return HtmlTemplate(template).into_response();
     }
 
     let template = AboutTemplate {
-        user: None,
+        base: BaseTemplate::new(headers).await,
     };
-    super::HtmlTemplate(template).into_response()
+
+    HtmlTemplate(template).into_response()
 }

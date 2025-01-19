@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex flex-col p-4 gap-4">
+<div class="flex flex-col gap-4">
     <div>
         {% include "partials/todo-input.html" %}
     </div>
 
-    <div class="flex items-center justify-between flex-row-reverse">
+    <div class="flex items-center justify-between">
         {% include "partials/todo-filter.html" %} 
         <span id="todo-count"></span>
     </div>

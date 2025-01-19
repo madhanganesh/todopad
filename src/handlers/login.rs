@@ -3,14 +3,14 @@ use askama::Template;
 use axum::{
     extract::{Form, State},
     response::{IntoResponse, Response},
-    http::{header, HeaderValue, StatusCode}
+    http::{header, HeaderMap, HeaderValue, StatusCode}
 };
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use jsonwebtoken::{encode, EncodingKey, Header};
 
 use crate::{repo::{self, get_user_from_email}, utils::{self, verify_password}};
-use super::Claims;
+use super::{BaseTemplate, Claims};
 
 const SECRET: &[u8] = b"my_secret_key";
 
@@ -18,11 +18,11 @@ const SECRET: &[u8] = b"my_secret_key";
 #[template(path = "login.html")]
 struct LoginTemplate {
     error: Option<String>,
-    user: Option<i64>,
+    base: BaseTemplate,
 }
 
-pub async fn login_page() -> impl IntoResponse {
-    let template = LoginTemplate { error: None, user: None };
+pub async fn login_page(headers: HeaderMap) -> impl IntoResponse {
+    let template = LoginTemplate { error: None, base: BaseTemplate::new(headers).await};
     super::HtmlTemplate(template)
 }
 
@@ -32,7 +32,9 @@ pub struct LoginForm {
     password: String,
 }
 
-pub async fn login_handler(State(pool): State<Arc<SqlitePool>>, Form(form): Form<LoginForm>) -> Response {
+pub async fn login_handler(headers: HeaderMap, 
+                            pool: State<Arc<SqlitePool>>, 
+                            Form(form): Form<LoginForm>) -> Response {
     let user = get_user_from_email(&pool, &form.email).await;
     if let Ok(user) = user {
         if verify_password(&user.password_hash, &form.password) {
@@ -41,8 +43,8 @@ pub async fn login_handler(State(pool): State<Arc<SqlitePool>>, Form(form): Form
     }
 
     let template = LoginTemplate {
+        base: BaseTemplate::new(headers).await,
         error: Some("Invalid username or password".to_string()),
-        user: None,
     };
     super::HtmlTemplate(template).into_response()
 }
@@ -62,12 +64,12 @@ pub async fn logout_handler() -> impl IntoResponse {
 #[derive(Template)]
 #[template(path = "register.html")]
 struct RegisterTemplate {
-    user: Option<i64>,
+    base: BaseTemplate,
     error: Option<String>,
 }
 
-pub async fn register_page() -> impl IntoResponse {
-    let template = RegisterTemplate{user: None, error: None};
+pub async fn register_page(headers: HeaderMap) -> impl IntoResponse {
+    let template = RegisterTemplate{error: None, base: BaseTemplate::new(headers).await};
     super::HtmlTemplate(template)
 }
 
@@ -78,13 +80,14 @@ pub struct RegisterForm {
 }
 
 pub async fn register_handler(
+    headers: HeaderMap,
     State(pool): State<Arc<SqlitePool>>,
     Form(form): Form<RegisterForm>,
 ) -> Response {
     let password_hash = match utils::hash_password(&form.password) {
         Ok(hash) => hash,
         Err(err) => { 
-            return handle_registration_error(err, "System error. Please contact administrator");
+            return handle_registration_error(headers, err, "System error. Please contact administrator").await;
         }
     };
 
@@ -94,7 +97,7 @@ pub async fn register_handler(
         }
         Err(err) => {
             let s = &err.to_string();
-            handle_registration_error(err, s)
+            handle_registration_error(headers, err, s).await
         }
     }
 }
@@ -129,11 +132,11 @@ fn set_cookie_and_redirect(user_id: i64) -> Response {
         .unwrap()
 }
 
-fn handle_registration_error(err: impl Debug, msg: &str) -> Response {
+async fn handle_registration_error(headers: HeaderMap, err: impl Debug, msg: &str) -> Response {
     println!("Error in register user: {:?}", err);
     let template = RegisterTemplate {
+        base: BaseTemplate::new(headers).await,
         error: Some(msg.to_string()),
-        user: None,
     };
     super::HtmlTemplate(template).into_response()
 }

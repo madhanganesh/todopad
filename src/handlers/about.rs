@@ -1,16 +1,14 @@
-use axum::response::IntoResponse;
-use askama::Template;
+use axum::{
+    http::HeaderMap,
+    response::{IntoResponse, Response},
+};
 
-#[derive(Template)]
-#[template(path = "about.html")]
-struct AboutTemplate {
-    user: Option<String>,
+use super::{AboutTemplate, BaseTemplate, HtmlTemplate};
+
+pub async fn about(headers: HeaderMap) -> Response {
+    let template = AboutTemplate {
+        base: BaseTemplate::new(headers).await,
+    };
+   HtmlTemplate(template).into_response()
 }
-
-pub async fn about() -> impl IntoResponse {
-    let template = AboutTemplate {user: None};
-    super::HtmlTemplate(template)
-}
-
-
 
