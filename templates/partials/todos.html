@@ -1,4 +1,4 @@
-<ul id="todo-list" class="space-y-4">
+<ul id="todo-list" hx-on::mutation="updateTodoCount()">
     {% for todo in todos %}
         {% include "partials/todo.html" %}
     {% endfor %}

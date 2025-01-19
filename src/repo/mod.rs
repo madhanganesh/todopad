@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use sqlx::{query_as, sqlite::SqliteError, SqlitePool, Error as SqlxError};
+use sqlx::{query_as, SqlitePool, Error as SqlxError};
 use thiserror::Error;
 
 use crate::models::{Tag, Todo, User};

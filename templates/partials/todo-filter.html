@@ -1,0 +1,13 @@
+<select 
+    id="filter" 
+    name="filter" 
+    class="border p-2 rounded"
+    hx-get="/todos"
+    hx-target="#todo-list"
+    hx-swap="innerHTML"
+>
+    <option value="pending">pending</option>
+    <option value="today">today</option>
+    <option value="yesterday">yesterday</option>
+    <option value="tomorrow">tomorrow</option>
+</select>

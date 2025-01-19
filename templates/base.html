@@ -5,30 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>todopad</title>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script defer src="https://unpkg.com/@popperjs/core@2"></script>
+    <script defer src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link href="/static/tailwind.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 text-gray-900">
-    <header>
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="text-lg font-bold">
-                    <a href="/">todopad</a>
-                </div>
+<body class="font-bai max-w-2xl mx-auto p-4">
 
-                <nav class="hidden md:flex space-x-6">
-                    <a href="/">todos</a>
-                    <a href="/about">about</a>
-                    {% if let Some(user) = user %}
-                        <a href="/logout">logout</a>
-                    {% else %}
-                        <a href="/login">login</a>
-                    {% endif %}
-                </nav>
-            </div>
+    <header class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-center gap-2">
+            <i class="fa-solid fa-list"></i>
+            <h1 class="text-2xl font-bold">todopad</h1>
         </div>
+
+        <nav>
+            <ul class="flex gap-4">
+                <li><a href="/">todos</a></li>
+                <li><a href="/about">about</a></li>
+                    {% if let Some(user) = user %}
+                    <li><a href="/logout">logout</a></li>
+                    {% else %}
+                    <li><a href="/login">login</a></li>
+                    {% endif %}
+            </ul>
+        </nav>
     </header>
 
-    <main>
+    <main class="flex flex-col  p-4 gap-4">
         {% block content %}{% endblock %}
     </main>
 </body>

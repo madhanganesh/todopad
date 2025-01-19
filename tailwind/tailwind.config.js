@@ -2,8 +2,11 @@
 module.exports = {
     content: ["../templates/**/*.{html,js}"],
     theme: {
-    extend: {
+        extend: {
+            fontFamily: {
+                bai: ['Bai Jamjuree', 'sans-serif'],
+            }
+        },
     },
-  },
   plugins: [],
 };

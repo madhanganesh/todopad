@@ -1,0 +1,17 @@
+<form 
+    id="todo=form" 
+    hx-post="/todos" 
+    hx-trigger="submit" 
+    hx-target="#todo-list" 
+    hx-swap="beforeend" 
+    hx-on::after-request="this.reset()"
+>
+    <input 
+        type="text" 
+        id="title"
+        name="title"
+        class="text-xl p-2 border-2 w-full outline-none" 
+        placeholder="add a todo"
+        autofocus
+        >
+</form>

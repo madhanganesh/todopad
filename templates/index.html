@@ -1,38 +1,74 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-    <form id="todo-form" class="flex items-center space-x-2 mb-4" hx-post="/todos" hx-trigger="submit" hx-target="#todo-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
-      <input
-        type="text"
-        id="title"
-        name="title"
-        placeholder="Add a new todo..."
-        class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-        autofocus
-      />
-      <button
-        type="submit"
-        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-300"
-      >
-        Add
-      </button>
-    </form>
+<div class="flex flex-col p-4 gap-4">
+    <div>
+        {% include "partials/todo-input.html" %}
+    </div>
+
+    <div class="flex items-center justify-between flex-row-reverse">
+        {% include "partials/todo-filter.html" %} 
+        <span id="todo-count"></span>
+    </div>
 
     <div>
-        <select name="filter" hx-get="/todos" hx-target="#todo-list" hx-swap="innerHTML">
-            <option value="pending">Pending</option>
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="tomorrow">Tomorrow</option>
-        </select>
+        {% if let Some(todos) = todos %}
+            {% include "partials/todos.html" %}
+        {%endif%}
     </div>
-    
-<div class="mb-4">
-  {% if let Some(todos) = todos %}
-    {% include "partials/todos.html" %}
-  {%endif%}
+
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function updateTodoCount() {
+            const count = document.querySelectorAll("#todo-list li").length;
+            let text = 'No todos';
+            if (count === 1) {
+                text = `${count} todo`;
+            } 
+            if (count > 1) {
+                text = `${count} todos`;
+            }
+            document.getElementById("todo-count").innerText = text
+        }
+
+        document.body.addEventListener("htmx:afterRequest", function () {
+            updateTodoCount();
+        });
+
+        updateTodoCount();
+    });
+
+    function parseTags(tooltipId, event) {
+        let contentElement = document.getElementById(tooltipId);
+        try {
+            let tagsArray = JSON.parse(contentElement.innerText); 
+            contentElement.innerHTML =  tagsArray.map(tag => `<div>${tag}</div>`).join(``);
+            if (event) {
+                showTooltip(event, tooltipId);
+            }
+        } catch (error) {
+            contentElement.innerHTML = "<div>Error loading tags</div>"; 
+            console.error("Invalid JSON from /tags:", error);
+        }
+    }
+
+    function showTooltip(event, tooltipId) {
+        const content = document.querySelector("#" + tooltipId).innerHTML;
+        tippy(event.target, {
+            content: content,
+            allowHTML: true,
+            interactive: true,
+            placement: "bottom",
+            theme: "light-border",
+            duration: 500,  
+        }).show();
+    }
+
+    function hideTooltip(event) {
+        event.target._tippy?.hide();
+    }
+</script>
 {% endblock %}
+
