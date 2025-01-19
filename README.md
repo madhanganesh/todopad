@@ -1,7 +1,7 @@
 sqlx database create
 sqlx migrate run
 
-echo "~/.cargo/bin/cargo sqlx prepare -- --lib 2>&1 >/dev/null; git add sqlx-data.json" > .git/hooks/pre-commit
+echo "~/.cargo/bin/cargo sqlx prepare 2>&1 >/dev/null; git add .sqlx" > .git/hooks/pre-commit
 
 flyctl secrets set ENV=release DATABASE_URL=sqlite:///data/todopad.db SQLX_OFFLINE=true RUST_LOG=debug GEMINI_API_KEY=AIzaSyBMREWluJ1x7m5IaHSXL_2AKXEORknO8bY
 
