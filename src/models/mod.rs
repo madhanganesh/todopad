@@ -9,7 +9,7 @@ pub struct User {
     pub password_hash: String,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct Todo {
     pub id: i64,
     pub user_id: i64,
@@ -17,6 +17,12 @@ pub struct Todo {
     pub due: Option<NaiveDate>,
     pub completed: bool,
     pub notes: Option<String>,
+}
+
+impl Todo {
+    pub fn notes_or_empty(&self) -> &str {
+        self.notes.as_deref().unwrap_or("")
+    }
 }
 
 #[derive(Serialize, FromRow)]

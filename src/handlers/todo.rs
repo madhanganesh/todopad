@@ -2,8 +2,8 @@
 use std::{collections::HashMap, env, sync::Arc};
 
 use askama::Template;
-use axum::{extract::{Path, Query, State}, response::{Html, IntoResponse, Response}, Extension, Form, Json};
-use chrono::Utc;
+use axum::{extract::{Path, Query, State}, http::HeaderMap, response::{Html, IntoResponse, Redirect, Response}, Extension, Form, Json};
+use chrono::{NaiveDate, Utc};
 use hyper::StatusCode;
 use serde::Deserialize;
 use sqlx::SqlitePool;
@@ -11,7 +11,7 @@ use sqlx::SqlitePool;
 // Assuming the Todo struct is defined in the same module or needs to be imported
 use crate::{models::Todo, repo::{self, get_pending_todos, get_todos_for_date, save_tags}, utils::tags::get_tags};
 
-use super::CurrentUser;
+use super::{BaseTemplate, CurrentUser, HtmlTemplate};
 
 #[derive(Deserialize)]
 pub struct TodoInputForm {
@@ -131,3 +131,124 @@ pub async fn get_tags_for_todo(
         }
     }
 }
+
+#[derive(Template)]
+#[template(path = "todo_edit.html")]
+struct EditTodoTemplate {
+    base: BaseTemplate,
+    todo: Todo,
+    tags: Vec<String>,
+    error: Option<String>,
+}
+
+async fn get_todo_response(
+    headers: HeaderMap,
+    pool: &SqlitePool, 
+    user_id: i64, 
+    todo_id: i64, 
+    err: Option<String>
+) -> Response {
+
+    let tags = repo::get_tags_for_todo(pool, user_id, todo_id).await.unwrap_or(vec![]);
+    match repo::get_todo(pool, user_id, todo_id).await {
+        Ok(todo) => {
+            let template = EditTodoTemplate {
+                base: BaseTemplate::new(headers).await,
+                todo,
+                tags, 
+                error: err
+            };
+
+            HtmlTemplate(template).into_response()
+        },
+        Err(err) => {
+            eprintln!("Error getting a todo: {:?}", err);
+            axum::response::Response::builder()
+                .status(500)
+                .body("Error fetching todo".into())
+                .unwrap()
+        }
+    }
+}
+
+pub async fn edit_todo(
+    headers: HeaderMap,
+    Extension(user): Extension<CurrentUser>,
+    Path(todo_id): Path<i64>,
+    State(pool): State<Arc<SqlitePool>>,
+) -> Response {
+    
+    get_todo_response(
+        headers, 
+        &pool, 
+        user.user_id, 
+        todo_id, 
+        None
+    ).await
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TodoEditForm {
+    pub title: String,
+    pub due_date: Option<String>,
+    pub completed: Option<String>,
+    pub notes: Option<String>,
+    pub tags: String, 
+}
+
+pub async fn update_todo(
+    headers: HeaderMap,
+    Path(todo_id): Path<i64>,
+    State(pool): State<Arc<SqlitePool>>,
+    Extension(user): Extension<CurrentUser>,
+    Form(form): Form<TodoEditForm>,
+) -> Response {
+
+    let due = match form.due_date {
+        Some(ref date_str) if !date_str.is_empty() => {
+            NaiveDate::parse_from_str(date_str, "%Y-%m-%d").ok()
+        }
+        _ => None,
+    };
+
+    let result = repo::update_todo(
+        &pool, 
+        user.user_id, 
+        todo_id, form.title, 
+        due, 
+        form.completed.is_some(), 
+        form.notes
+    ).await;
+
+
+    match result {
+        Ok(_) => {
+            update_tags(&pool, user.user_id, todo_id, &form.tags).await;
+            Redirect::to("/").into_response()
+        }, 
+        Err(err) => {
+            eprintln!("Error getting a todo: {:?}", err);
+            get_todo_response(
+                headers, 
+                &pool, 
+                user.user_id, 
+                todo_id, 
+                Some("Failed to update the todo item. Please try again.".to_string())
+            ).await
+        }
+    }
+}
+
+async fn update_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, tags_str: &str)  {
+    let tags: Vec<String> = tags_str
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    match repo::save_tags(pool, user_id, todo_id, tags).await {
+        Ok(_) => (),
+        Err(err) => eprintln!("Error while saving tags: {:?}", err)
+    }
+}
+

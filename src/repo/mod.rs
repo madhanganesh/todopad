@@ -44,6 +44,19 @@ pub async fn get_todos_for_date(pool: &SqlitePool, user_id: i64, date: &NaiveDat
         .await
 }
 
+pub async fn get_todo(pool: &SqlitePool, user_id: i64, todo_id: i64) 
+    -> Result<Todo, sqlx::Error> {
+    let todo = query_as!(
+        Todo, 
+        "SELECT * from todos where user_id=? and id=?", 
+        user_id, todo_id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(todo)
+}
+
 pub async fn create_todo(pool: &SqlitePool, user_id: i64, title: &str) -> Result<Todo, sqlx::Error> {
     let result = query_as!(Todo, "INSERT INTO todos (user_id, title) VALUES (?, ?)", user_id, title)
         .execute(pool)
@@ -59,6 +72,25 @@ pub async fn create_todo(pool: &SqlitePool, user_id: i64, title: &str) -> Result
     .await?;
 
     Ok(todo)
+}
+
+pub async fn update_todo(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String, due: Option<NaiveDate>, completed: bool, notes: Option<String>) -> Result<(), sqlx::Error> {
+    query_as!(Todo, 
+        r#"
+        UPDATE todos SET title=?, due=?, completed=?, notes=?
+        WHERE user_id=? AND id=?
+        "#,
+        title,
+        due, 
+        completed,
+        notes,
+        user_id,
+        todo_id
+        )
+        .execute(pool)
+        .await?;
+        
+    Ok(())
 }
 
 pub async fn delete_todo(pool: &SqlitePool, user_id: i64, todo_id: i64) -> Result<(), sqlx::Error> {
@@ -78,6 +110,11 @@ pub async fn toggle_todo(pool: &SqlitePool, user_id: i64, todo_id: i64) -> Resul
 }
 
 pub async fn save_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, tags: Vec<String>) -> Result<(), sqlx::Error> {
+
+    query_as!(Tag,"DELETE FROM tags WHERE user_id=? and todo_id=?", user_id, todo_id)
+        .execute(pool)
+        .await?;
+
     for tag in &tags {
         query_as!(Tag,
             r#"

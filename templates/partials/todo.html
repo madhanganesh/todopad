@@ -11,28 +11,67 @@
                 class="cursor-pointer"
             >
             
-            <span>{{todo.title}}</span>
+            <a 
+                href="/todos/{{ todo.id }}" 
+                class="cursor-pointer text-black"
+            >
+                {{ todo.title }}
+            </a>
         </div>
 
-        <div class="hidden group-hover:flex gap-2">
-            <div>
+       <div class="hidden group-hover:flex gap-2">
+    <!-- Tooltip Icon Wrapper -->
+        <!-- Icon that triggers the tooltip -->
+        <span 
+            x-data="{ showTooltip: false }" 
+            @mouseenter="showTooltip = true" 
+            @mouseleave="showTooltip = false"
+            hx-get="/todos/{{ todo.id }}/tags" 
+            hx-trigger="mouseenter once" 
+            hx-target="#tooltip-content-{{ todo.id }}"
+            hx-on::after-request="formatTags('{{ todo.id }}')"
+            class="cursor-pointer"
+        >
+            <i class="fas fa-tag"></i>
+
+        <!-- Floating Tooltip (Now Absolutely Positioned Relative to Body) -->
+        <div x-show="showTooltip"
+                class="text-sm text-white absolute bg-gray-500 rounded-lg p-2
+ transform translate-y-2 translate-x-2"
+>
+            <div id="tooltip-content-{{ todo.id }}">Loading...</div>
+        </div>
+        </span>
+
+    <!-- Delete Icon -->
+    <span 
+        class="cursor-pointer"
+        hx-delete="/todos/{{ todo.id }}"
+        hx-target="#todo-{{ todo.id }}"
+        hx-swap="outerHTML"
+    >
+        <i class="fa-solid fa-trash"></i>
+    </span>
+</div> 
+
+        <!--div class="hidden group-hover:flex gap-2">
+            <div class="relative inline-block" x-data="{ showTooltip: false }">
                 <span 
-                    class="cursor-pointer"
+                    @mouseenter="showTooltip = true" 
+                    @mouseleave="showTooltip = false"
                     hx-get="/todos/{{todo.id}}/tags" 
-                    hx-trigger="mouseenter" 
-                    hx-target="#tooltip-content-{{todo.id}}" 
-                    hx-on::after-request="parseTags('tooltip-content-{{todo.id}}', event)"
-                    hx-swap="innerHTML"
-                    onmouseenter="showTooltip(event, 'tooltip-content-{{todo.id}}')" 
-                    onmouseleave="hideTooltip(event)"
+                    hx-trigger="mouseenter once" 
+                    hx-target="#tooltip-content"
                 >
                     <i class="fas fa-tag"></i>
                 </span>
 
-                <div id="tooltip" style="display: none;">
-                    <div id="tooltip-content-{{todo.id}}" class="flex flex-col">
-                        <div>Loading...</div>
-                    </div>
+                <div x-show="showTooltip" x-transition.opacity 
+                        class="absolute left-1/2 transform -translate-x-1/2 top-10 
+                        w-40 bg-black text-white text-xs rounded-lg px-3 py-2 shadow-lg z-50"
+                         style="display: none;"
+                >
+                    <div id="tooltip-content">Loading...</div>
                 </div>
             </div>
 
@@ -44,7 +83,7 @@
             >
                 <i class="fa-solid fa-trash"></i>
             </span>
-        </div>
+        </div-->
 </li>
 
             

@@ -17,7 +17,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use handlers::index::index;
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler, register_page, register_handler};
-use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo};
+use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo};
 use handlers::auth::auth_middleware;
 
 #[derive(Clone)]
@@ -56,6 +56,8 @@ async fn main() {
         .nest_service("/static", ServeDir::new("static"));
 
     let auth_routes = Router::new()
+        .route("/todos/:id", get(edit_todo))
+        .route("/todos/:id", post(update_todo))
         .route("/todos", post(create_todo))
         .route("/todos", get(get_todos))
         .route("/todos/:id", delete(delete_todo))

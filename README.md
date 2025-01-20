@@ -18,3 +18,12 @@ docker run --name todopad -e ENV=development -e DATABASE_URL=sqlite://todopad.db
 
 
 --env-file .env
+
+
+TODO:
+1. when editing the title the tags are not regenerated. but when implementing this, need to careful
+that if user has given any tags explicitly - then no need to regenarate the tags again
+
+2. Show data (relative day) in the list
+
+3. Parse any link in the notes and show links and open from todo item 
