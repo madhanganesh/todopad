@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM tags WHERE user_id=? and todo_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "22ba8f0d3c80b9a4ee02dcb64ae9a6a7fedf7a8aeacd474d59823ffacd3ef473"
+}
