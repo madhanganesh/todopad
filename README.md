@@ -27,3 +27,7 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 2. Show data (relative day) in the list
 
 3. Parse any link in the notes and show links and open from todo item 
+
+4. Refactor edit HTML
+
+5. Run google page insights - and fix the perf issues

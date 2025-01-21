@@ -11,7 +11,7 @@ use sqlx::SqlitePool;
 // Assuming the Todo struct is defined in the same module or needs to be imported
 use crate::{models::Todo, repo::{self, get_pending_todos, get_todos_for_date, save_tags}, utils::tags::get_tags};
 
-use super::{BaseTemplate, CurrentUser, HtmlTemplate};
+use super::{BaseTemplate, CurrentUser, HtmlTemplate, spawn_get_tags_and_save};
 
 #[derive(Deserialize)]
 pub struct TodoInputForm {
@@ -103,6 +103,7 @@ pub async fn delete_todo(
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
+
 
 pub async fn toggle_todo(
     Extension(user): Extension<CurrentUser>,
@@ -214,7 +215,7 @@ pub async fn update_todo(
     let result = repo::update_todo(
         &pool, 
         user.user_id, 
-        todo_id, form.title, 
+        todo_id, form.title.clone(), 
         due, 
         form.completed.is_some(), 
         form.notes
@@ -223,7 +224,7 @@ pub async fn update_todo(
 
     match result {
         Ok(_) => {
-            update_tags(&pool, user.user_id, todo_id, &form.tags).await;
+            update_tags(&pool, user.user_id, todo_id, String::from(&form.title), &form.tags).await;
             Redirect::to("/").into_response()
         }, 
         Err(err) => {
@@ -239,16 +240,46 @@ pub async fn update_todo(
     }
 }
 
-async fn update_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, tags_str: &str)  {
+pub async fn delete_todo_from_edit(
+    headers: HeaderMap,
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>,
+    Path(todo_id): Path<i64>,
+) -> Response {
+    let result = repo::delete_todo(&pool, user.user_id, todo_id).await;
+    match result {
+        Ok(_) => {
+            Redirect::to("/").into_response()
+        }, 
+        Err(err) => {
+            eprintln!("Error getting a todo: {:?}", err);
+            get_todo_response(
+                headers, 
+                &pool, 
+                user.user_id, 
+                todo_id, 
+                Some("Failed to update the todo item. Please try again.".to_string())
+            ).await
+        }
+    }
+}
+
+async fn update_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String, tags_str: &str)  {
     let tags: Vec<String> = tags_str
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
 
-    match repo::save_tags(pool, user_id, todo_id, tags).await {
-        Ok(_) => (),
-        Err(err) => eprintln!("Error while saving tags: {:?}", err)
+    if let Ok(current_tags) = repo::get_tags_for_todo(pool, user_id, todo_id).await {
+        if current_tags == tags {
+            spawn_get_tags_and_save(pool, user_id, todo_id, title);
+        } else {
+            match repo::save_tags(pool, user_id, todo_id, tags).await {
+                Ok(_) => (),
+                Err(err) => eprintln!("Error while saving tags: {:?}", err)
+            }
+        }
     }
 }
 

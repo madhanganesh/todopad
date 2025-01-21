@@ -63,13 +63,24 @@
          </div>
 
         <div class="flex gap-4">
-            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Save</button>
-            <a href="/" class="bg-red-500 text-white px-4 py-2 rounded">Cancel</a>
+            <button type="submit" class="bg-gray-500 text-white px-4 py-2 rounded">Save</button>
+            <button type="button" 
+                hx-delete="/todos/_edit/{{todo.id}}"
+                class="bg-gray-500 text-white px-4 py-2 rounded">
+            Delete
+        </button>
+            <a href="/" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</a>
         </div>
     </form>
 </div> 
 
 <script>
+    function redirectToHome() {
+        alert('here');
+        setTimeout(() => {
+            window.location.replace('/');  // Force full page reload to "/"
+        }, 100);
+    }
     function handleTagInput(event) {
         if (event.key === 'Enter' || event.key === ',') {
             event.preventDefault();

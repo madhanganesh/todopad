@@ -17,7 +17,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use handlers::index::index;
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler, register_page, register_handler};
-use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo};
+use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit};
 use handlers::auth::auth_middleware;
 
 #[derive(Clone)]
@@ -61,6 +61,7 @@ async fn main() {
         .route("/todos", post(create_todo))
         .route("/todos", get(get_todos))
         .route("/todos/:id", delete(delete_todo))
+        .route("/todos/_edit/:id", delete(delete_todo_from_edit))
         .route("/todos/:id/toggle", post(toggle_todo))
         .route("/todos/:id/tags", get(get_tags_for_todo))
         .route_layer(middleware::from_fn(auth_middleware));
