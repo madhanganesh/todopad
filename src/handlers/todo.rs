@@ -8,7 +8,6 @@ use hyper::StatusCode;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 
-// Assuming the Todo struct is defined in the same module or needs to be imported
 use crate::{models::Todo, repo::{self, get_pending_todos, get_todos_for_date, save_tags}, utils::tags::get_tags};
 
 use super::{BaseTemplate, CurrentUser, HtmlTemplate, spawn_get_tags_and_save};
@@ -22,6 +21,7 @@ pub struct TodoInputForm {
 #[template(path = "partials/todo.html")]
 pub struct TodoTemplate<'a> {
     pub todo: &'a Todo,
+    pub show_date: bool,
 }
 
 pub async fn create_todo(
@@ -30,7 +30,7 @@ pub async fn create_todo(
     Form(form): Form<TodoInputForm>) -> Response {
     match repo::create_todo(&pool, user.user_id, &form.title).await {
         Ok(todo) => {
-            let template = TodoTemplate { todo: &todo };
+            let template = TodoTemplate { todo: &todo, show_date: true };
 
             let openai_api_key = env::var("OPENAI_API_KEY");
             match openai_api_key {
@@ -65,6 +65,7 @@ pub async fn create_todo(
 #[template(path="partials/todos.html")]
 pub struct TodosTemplate {
     pub todos: Vec<Todo>,
+    pub show_date: bool,
 }
 
 pub async fn get_todos(
@@ -81,15 +82,15 @@ pub async fn get_todos(
     let tomorrow = today.succ_opt().unwrap();
     let yesterday = today.pred_opt().unwrap();
 
-    let todos = match filter {
-        "pending" => get_pending_todos(&pool, user.user_id).await.unwrap(),
-        "today" => get_todos_for_date(&pool, user.user_id, &today).await.unwrap(),
-        "yesterday" => get_todos_for_date(&pool, user.user_id, &yesterday).await.unwrap(),
-        "tomorrow" => get_todos_for_date(&pool, user.user_id, &tomorrow).await.unwrap(),
-        _ =>  get_pending_todos(&pool, user.user_id).await.unwrap(),
+    let (todos, show_date) = match filter {
+        "pending" => (get_pending_todos(&pool, user.user_id).await.unwrap(), true),
+        "today" => (get_todos_for_date(&pool, user.user_id, &today).await.unwrap(), false),
+        "yesterday" => (get_todos_for_date(&pool, user.user_id, &yesterday).await.unwrap(), false),
+        "tomorrow" => (get_todos_for_date(&pool, user.user_id, &tomorrow).await.unwrap(), false),
+        _ =>  (get_pending_todos(&pool, user.user_id).await.unwrap(), true),
     };
 
-    let template = TodosTemplate { todos };
+    let template = TodosTemplate { todos, show_date };
     super::HtmlTemplate(template).into_response()
 }
 

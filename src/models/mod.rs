@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{Local, NaiveDate};
 use serde::Serialize;
 use sqlx::FromRow;
 
@@ -22,6 +22,22 @@ pub struct Todo {
 impl Todo {
     pub fn notes_or_empty(&self) -> &str {
         self.notes.as_deref().unwrap_or("")
+    }
+
+    pub fn relative_due(&self) -> String {
+        let due = self.due.unwrap();
+        let today = Local::now().date_naive();
+        let difference = (due - today).num_days();
+
+        match difference {
+            0 => "today".to_string(),
+            1 => "tomorrow".to_string(),
+            -1 => "yesterday".to_string(),
+            //n if n > 1 => format!("{} days later", n),
+            //n if n < -1 => format!("{} days back", -n),
+            //_ => unreachable!(),
+            _ => due.format("%d %b").to_string(),
+        }
     }
 }
 

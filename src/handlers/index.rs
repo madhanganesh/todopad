@@ -16,6 +16,7 @@ use crate::{models::Todo, repo};
 struct IndexTemplate {
     base: BaseTemplate,
     todos: Option<Vec<Todo>>,
+    show_date: bool,
 }
 
 pub async fn index(headers: HeaderMap, State(pool): State<Arc<SqlitePool>>) -> Response {
@@ -24,6 +25,7 @@ pub async fn index(headers: HeaderMap, State(pool): State<Arc<SqlitePool>>) -> R
         let template = IndexTemplate {
             base: BaseTemplate::new(headers).await,
             todos: Some(todos),
+            show_date: true,
         };
         return HtmlTemplate(template).into_response();
     }
