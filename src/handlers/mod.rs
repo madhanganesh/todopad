@@ -9,9 +9,11 @@ use axum::{
     http::{StatusCode, HeaderMap},
     response::{Html, IntoResponse, Response},
 };
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 use auth::validate_cookie;
+use tower_sessions::Session;
 
 const SECRET: &[u8] = b"my_secret_key";
 
@@ -80,7 +82,7 @@ struct AboutTemplate {
 
 use std::env;
 use sqlx::SqlitePool;
-use crate::utils::tags::get_tags;
+use crate::{models::Todo, repo::{get_pending_todos, get_todos_for_date}, utils::tags::get_tags};
 use crate::repo::save_tags;
 
 fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String) {
@@ -100,5 +102,24 @@ fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title:
         Err(_) => {
             println!("OPENAI_API_KEY is not set so tags are not idetified");
         }
+    }
+}
+
+async fn get_todos_and_show_date(
+        filter: &str,
+        pool: &SqlitePool,
+        user_id: i64
+) -> (Vec<Todo>, bool) {
+
+    let today = Utc::now().naive_utc().date();
+    let tomorrow = today.succ_opt().unwrap();
+    let yesterday = today.pred_opt().unwrap();
+
+    match filter {
+        "pending" => (get_pending_todos(pool, user_id).await.unwrap(), true),
+        "today" => (get_todos_for_date(pool, user_id, &today).await.unwrap(), false),
+        "yesterday" => (get_todos_for_date(pool, user_id, &yesterday).await.unwrap(), false),
+        "tomorrow" => (get_todos_for_date(pool, user_id, &tomorrow).await.unwrap(), false),
+        _ =>  (get_pending_todos(pool, user_id).await.unwrap(), true),
     }
 }

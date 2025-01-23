@@ -12,6 +12,7 @@ use axum::{
 };
 use dotenv::dotenv;
 use tower_http::services::ServeDir;
+use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 
 use handlers::index::index;
@@ -36,6 +37,11 @@ async fn main() {
     println!("DATABASE_URL: {}", database_url);
     println!("SQLX_OFFLINE is set to: {}", env::var("SQLX_OFFLINE").unwrap());
 
+    let store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(store)
+        .with_secure(false)
+        .with_expiry(Expiry::OnSessionEnd);
+
     let pool = match get_db(&database_url).await {
         Ok(pool) => pool,
         Err(err) => {
@@ -56,20 +62,20 @@ async fn main() {
         .nest_service("/static", ServeDir::new("static"));
 
     let auth_routes = Router::new()
-        .route("/todos/:id", get(edit_todo))
-        .route("/todos/:id", post(update_todo))
+        .route("/todos/{id}", get(edit_todo))
+        .route("/todos/{id}", post(update_todo))
         .route("/todos", post(create_todo))
         .route("/todos", get(get_todos))
-        .route("/todos/:id", delete(delete_todo))
-        .route("/todos/_edit/:id", delete(delete_todo_from_edit))
-        .route("/todos/:id/toggle", post(toggle_todo))
-        .route("/todos/:id/tags", get(get_tags_for_todo))
+        .route("/todos/{id}", delete(delete_todo))
+        .route("/todos/_edit/{id}", delete(delete_todo_from_edit))
+        .route("/todos/{id}/toggle", post(toggle_todo))
+        .route("/todos/{id}/tags", get(get_tags_for_todo))
         .route_layer(middleware::from_fn(auth_middleware));
 
     let routes = public_routes
         .merge(auth_routes)
+        .layer(session_layer)
         .with_state(pool);
-    
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     axum::serve(listener, routes).await.unwrap();
@@ -86,9 +92,3 @@ async fn get_db(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
 
     Ok(pool)
 }
-
-/*async fn seed_dev_data(pool: &SqlitePool) -> Result<(), sqlx::Error> {
-    let seed_script = include_str!("../seeds/seed_dev_data.sql");
-    pool.execute(seed_script).await?;
-    Ok(())
-}*/

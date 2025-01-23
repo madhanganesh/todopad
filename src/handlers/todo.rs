@@ -7,10 +7,11 @@ use chrono::{NaiveDate, Utc};
 use hyper::StatusCode;
 use serde::Deserialize;
 use sqlx::SqlitePool;
+use tower_sessions::Session;
 
 use crate::{models::Todo, repo::{self, get_pending_todos, get_todos_for_date, save_tags}, utils::tags::get_tags};
 
-use super::{BaseTemplate, CurrentUser, HtmlTemplate, spawn_get_tags_and_save};
+use super::{get_todos_and_show_date, spawn_get_tags_and_save, BaseTemplate, CurrentUser, HtmlTemplate};
 
 #[derive(Deserialize)]
 pub struct TodoInputForm {
@@ -69,31 +70,21 @@ pub struct TodosTemplate {
 }
 
 pub async fn get_todos(
+    session: Session,
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>, 
-    query_params: Option<Query<HashMap<String, String>>>,
-) -> Response {
-    let filter = query_params
-        .as_ref()
-        .and_then(|q| q.get("filter").map(String::as_str))
+    Query(query_params): Query<HashMap<String, String>>,
+) -> impl IntoResponse {
+
+    let filter: &str = query_params.get("filter")
+        .map(String::as_str)
         .unwrap_or("pending");
 
-    let today = Utc::now().naive_utc().date();
-    let tomorrow = today.succ_opt().unwrap();
-    let yesterday = today.pred_opt().unwrap();
-
-    let (todos, show_date) = match filter {
-        "pending" => (get_pending_todos(&pool, user.user_id).await.unwrap(), true),
-        "today" => (get_todos_for_date(&pool, user.user_id, &today).await.unwrap(), false),
-        "yesterday" => (get_todos_for_date(&pool, user.user_id, &yesterday).await.unwrap(), false),
-        "tomorrow" => (get_todos_for_date(&pool, user.user_id, &tomorrow).await.unwrap(), false),
-        _ =>  (get_pending_todos(&pool, user.user_id).await.unwrap(), true),
-    };
-
+    let (todos, show_date) = get_todos_and_show_date(filter, &pool, user.user_id).await;
+    session.insert("filter", filter).await.unwrap();
     let template = TodosTemplate { todos, show_date };
     super::HtmlTemplate(template).into_response()
 }
-
 pub async fn delete_todo(
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>,

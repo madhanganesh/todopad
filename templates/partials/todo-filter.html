@@ -6,8 +6,19 @@
     hx-target="#todo-list"
     hx-swap="innerHTML"
 >
-    <option value="pending">pending</option>
-    <option value="today">today</option>
-    <option value="yesterday">yesterday</option>
-    <option value="tomorrow">tomorrow</option>
+    <option value="pending" {% if filter == "pending" %}selected{% endif %}>
+        pending
+    </option>
+
+    <option value="today" {% if filter == "today" %}selected{% endif %}>
+        today
+    </option>
+
+    <option value="yesterday" {% if filter == "yesterday" %}selected{% endif %}>
+        yesterday
+    </option>
+    
+    <option value="tomorrow" {% if filter == "tomorrow" %}selected{% endif %}>
+        tomorrow
+    </option>
 </select>
