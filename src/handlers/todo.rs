@@ -1,16 +1,18 @@
-
-use std::{collections::HashMap, env, sync::Arc};
-
+use std::{collections::HashMap, sync::Arc};
 use askama::Template;
-use axum::{extract::{Path, Query, State}, http::HeaderMap, response::{Html, IntoResponse, Redirect, Response}, Extension, Form, Json};
-use chrono::{NaiveDate, Utc};
+use axum::{
+    Extension, Form, Json,
+    extract::{Path, Query, State}, 
+    http::{HeaderMap, HeaderValue}, 
+    response::{Html, IntoResponse, Response}, 
+};
+use chrono::NaiveDate;
 use hyper::StatusCode;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_sessions::Session;
 
-use crate::{models::Todo, repo::{self, get_pending_todos, get_todos_for_date, save_tags}, utils::tags::get_tags};
-
+use crate::{models::Todo, repo::{self}};
 use super::{get_todos_and_show_date, spawn_get_tags_and_save, BaseTemplate, CurrentUser, HtmlTemplate};
 
 #[derive(Deserialize)]
@@ -26,34 +28,18 @@ pub struct TodoTemplate<'a> {
 }
 
 pub async fn create_todo(
+    session: Session,
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>, 
     Form(form): Form<TodoInputForm>) -> Response {
-    match repo::create_todo(&pool, user.user_id, &form.title).await {
+
+    let filter: String = session.get("filter").await.unwrap().unwrap_or("pending".to_string());
+    let (due, show_date) = super::get_date_and_show_date(&filter); 
+
+    match repo::create_todo(&pool, user.user_id, &form.title, &due).await {
         Ok(todo) => {
-            let template = TodoTemplate { todo: &todo, show_date: true };
-
-            let openai_api_key = env::var("OPENAI_API_KEY");
-            match openai_api_key {
-                Ok(api_key) => {
-                    let todo_id = todo.id;
-                    let user_id = user.user_id;
-                    let title = todo.title.clone();
-                    let pool_clone = Arc::clone(&pool);
-                    tokio::spawn(async move {
-                        match get_tags(&api_key, &title).await {
-                            Ok(tags) => {
-                                 _ = save_tags(&pool_clone, user_id, todo_id, tags).await;
-                            }
-                            Err(err) => eprintln!("Error: {:?}", err),
-                        }
-                    });
-                },
-                Err(_) => {
-                    println!("OPENAI_API_KEY is not set so tags are not idetified");
-                }
-            }
-
+            let template = TodoTemplate { todo: &todo, show_date };
+            spawn_get_tags_and_save(&pool, user.user_id, todo.id, todo.title.clone());
             super::HtmlTemplate(template).into_response()
         }
         Err(_) => {
@@ -85,6 +71,7 @@ pub async fn get_todos(
     let template = TodosTemplate { todos, show_date };
     super::HtmlTemplate(template).into_response()
 }
+
 pub async fn delete_todo(
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>,
@@ -95,7 +82,6 @@ pub async fn delete_todo(
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
-
 
 pub async fn toggle_todo(
     Extension(user): Extension<CurrentUser>,
@@ -113,8 +99,9 @@ pub async fn get_tags_for_todo(
     State(pool): State<Arc<SqlitePool>>, 
     Path(id): Path<i64>,  
 ) -> Result<Json<Vec<String>>, axum::response::Response> {
+
     match repo::get_tags_for_todo(&pool, user.user_id, id).await {
-        Ok(tags) => Ok(Json(tags)), // Return tags as JSON
+        Ok(tags) => Ok(Json(tags)), 
         Err(err) => {
             eprintln!("Error fetching tags: {:?}", err);
             Err(axum::response::Response::builder()
@@ -217,7 +204,11 @@ pub async fn update_todo(
     match result {
         Ok(_) => {
             update_tags(&pool, user.user_id, todo_id, String::from(&form.title), &form.tags).await;
-            Redirect::to("/").into_response()
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("HX-Location", HeaderValue::from_static("/"))
+                .body(axum::body::Body::empty())
+                .unwrap()
         }, 
         Err(err) => {
             eprintln!("Error getting a todo: {:?}", err);
@@ -241,7 +232,11 @@ pub async fn delete_todo_from_edit(
     let result = repo::delete_todo(&pool, user.user_id, todo_id).await;
     match result {
         Ok(_) => {
-            Redirect::to("/").into_response()
+            Response::builder()
+                .status(StatusCode::OK)
+                .header("HX-Location", HeaderValue::from_static("/"))
+                .body(axum::body::Body::empty())
+                .unwrap()
         }, 
         Err(err) => {
             eprintln!("Error getting a todo: {:?}", err);
@@ -274,4 +269,3 @@ async fn update_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, title: Strin
         }
     }
 }
-

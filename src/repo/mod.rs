@@ -57,8 +57,8 @@ pub async fn get_todo(pool: &SqlitePool, user_id: i64, todo_id: i64)
     Ok(todo)
 }
 
-pub async fn create_todo(pool: &SqlitePool, user_id: i64, title: &str) -> Result<Todo, sqlx::Error> {
-    let result = query_as!(Todo, "INSERT INTO todos (user_id, title) VALUES (?, ?)", user_id, title)
+pub async fn create_todo(pool: &SqlitePool, user_id: i64, title: &str, due: &NaiveDate) -> Result<Todo, sqlx::Error> {
+    let result = query_as!(Todo, "INSERT INTO todos (user_id, title, due) VALUES (?, ?, ?)", user_id, title, due)
         .execute(pool)
         .await?;
     let last_insert_id = result.last_insert_rowid();

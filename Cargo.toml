@@ -29,3 +29,4 @@ reqwest = { version = "0.11", features = ["json"] }
 anyhow = "1.0.95"
 thiserror = "2.0.9"
 tower-sessions = "0.14.0"
+regex = "1.11.1"

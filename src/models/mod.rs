@@ -1,4 +1,5 @@
 use chrono::{Local, NaiveDate};
+use regex::Regex;
 use serde::Serialize;
 use sqlx::FromRow;
 
@@ -38,6 +39,15 @@ impl Todo {
             //_ => unreachable!(),
             _ => due.format("%d %b").to_string(),
         }
+    }
+
+    pub fn extract_links(&self) -> Vec<String> {
+        let url_regex = Regex::new(r"https?://[^\s]+").unwrap();
+        url_regex
+            .find_iter(self.notes.as_deref().unwrap_or(""))
+            .map(|mat| mat.as_str().to_string())
+            .take(3)
+            .collect()
     }
 }
 

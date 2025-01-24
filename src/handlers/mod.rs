@@ -4,16 +4,19 @@ pub mod index;
 pub mod login;
 pub mod todo;
 
+use std::env;
 use askama::Template;
 use axum::{
     http::{StatusCode, HeaderMap},
     response::{Html, IntoResponse, Response},
 };
-use chrono::Utc;
+use chrono::{NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
-
 use auth::validate_cookie;
-use tower_sessions::Session;
+use sqlx::SqlitePool;
+
+use crate::{models::Todo, repo::{get_pending_todos, get_todos_for_date}, utils::tags::get_tags};
+use crate::repo::save_tags;
 
 const SECRET: &[u8] = b"my_secret_key";
 
@@ -80,10 +83,6 @@ struct AboutTemplate {
     base: BaseTemplate,
 }
 
-use std::env;
-use sqlx::SqlitePool;
-use crate::{models::Todo, repo::{get_pending_todos, get_todos_for_date}, utils::tags::get_tags};
-use crate::repo::save_tags;
 
 fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String) {
     let openai_api_key = env::var("OPENAI_API_KEY");
@@ -121,5 +120,19 @@ async fn get_todos_and_show_date(
         "yesterday" => (get_todos_for_date(pool, user_id, &yesterday).await.unwrap(), false),
         "tomorrow" => (get_todos_for_date(pool, user_id, &tomorrow).await.unwrap(), false),
         _ =>  (get_pending_todos(pool, user_id).await.unwrap(), true),
+    }
+}
+
+fn get_date_and_show_date(filter: &str) -> (NaiveDate, bool) {
+    let today = Utc::now().naive_utc().date();
+    let tomorrow = today.succ_opt().unwrap();
+    let yesterday = today.pred_opt().unwrap();
+
+    match filter {
+        "pending" => (today, true),
+        "today" => (today, false),
+        "tomorrow" => (tomorrow, false),
+        "yesterday" => (yesterday, false),
+        _ => (today, true),
     }
 }
