@@ -74,14 +74,15 @@ pub async fn create_todo(pool: &SqlitePool, user_id: i64, title: &str, due: &Nai
     Ok(todo)
 }
 
-pub async fn update_todo(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String, due: Option<NaiveDate>, completed: bool, notes: Option<String>) -> Result<(), sqlx::Error> {
+pub async fn update_todo(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String, due: Option<NaiveDate>, effort: f64, completed: bool, notes: Option<String>) -> Result<(), sqlx::Error> {
     query_as!(Todo, 
         r#"
-        UPDATE todos SET title=?, due=?, completed=?, notes=?
+        UPDATE todos SET title=?, due=?, effort=?, completed=?, notes=?
         WHERE user_id=? AND id=?
         "#,
         title,
         due, 
+        effort,
         completed,
         notes,
         user_id,

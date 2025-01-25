@@ -172,6 +172,7 @@ pub struct TodoEditForm {
     pub title: String,
     pub due_date: Option<String>,
     pub completed: Option<String>,
+    pub effort: f64,
     pub notes: Option<String>,
     pub tags: String, 
 }
@@ -196,6 +197,7 @@ pub async fn update_todo(
         user.user_id, 
         todo_id, form.title.clone(), 
         due, 
+        form.effort,
         form.completed.is_some(), 
         form.notes
     ).await;

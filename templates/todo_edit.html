@@ -11,24 +11,52 @@
 
     <form hx-post="/todos/{{ todo.id }}" hx-target="body">
         <div class="mb-4">
-            <label class="block font-medium">Title</label>
-            <input type="text" name="title" value="{{ todo.title }}" class="w-full px-3 py-2 border rounded">
+            <label class="block font-semibold">Title</label>
+            <input 
+                type="text" 
+                name="title" 
+                value="{{ todo.title }}" 
+                class="w-full px-3 py-2 border rounded"
+                required
+            >
         </div>
 
         <div class="mb-4">
-            <label class="block font-medium">Due Date</label>
-            <input type="date" name="due_date" value="{{ todo.due.unwrap() }}" class="w-full px-3 py-2 border rounded">
+            <label class="block font-semibold">Due Date</label>
+            <input 
+                type="date" 
+                name="due_date" 
+                value="{{ todo.due.unwrap() }}" 
+                class="w-full px-3 py-2 border rounded"
+                required
+            >
         </div>
 
         <div class="mb-4">
-            <label class="flex items-center">
-                <input type="checkbox" name="completed" {% if todo.completed %}checked{% endif %}>
-                <span class="ml-2">Completed</span>
-            </label>
+            <label class="block font-semibold">Effort</label>
+            <input 
+                type="number" 
+                step="0.5"
+                name="effort" 
+                value="{{ todo.effort }}" 
+                class="w-full px-3 py-2 border rounded"
+                required
+            >
         </div>
 
         <div class="mb-4">
-            <label class="block font-medium">Tags</label>
+            <label class="block font-semibold">Done</label>
+            <input 
+                type="checkbox" 
+                name="completed" 
+                class="cursor-pointer ml-1"
+                style="transform: scale(1.5);"
+                {% if todo.completed %}checked{% endif %}
+            >
+        </div>
+
+        <div class="mb-4">
+            <label class="block font-semibold">Tags</label>
             <div class="flex items-center border rounded px-2 py-1 focus-within:ring focus-within:ring-blue-300 w-full flex-wrap gap-1">
                 <!-- Tags container (flex row) -->
                 <div id="tag-container" class="flex flex-wrap gap-1 items-center">
@@ -58,15 +86,15 @@
         </div>
         
          <div class="mb-4">
-                <label class="block font-medium">Notes</label>
+                <label class="block font-semibold">Notes</label>
                 <textarea name="notes" class="w-full px-3 py-2 border rounded">{{ todo.notes_or_empty() }}</textarea> 
          </div>
 
         <div class="flex gap-4">
-            <button type="submit" class="bg-gray-500 text-white px-4 py-2 rounded">Save</button>
+            <button type="submit" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer">Save</button>
             <button type="button" 
                 hx-delete="/todos/_edit/{{todo.id}}"
-                class="bg-gray-500 text-white px-4 py-2 rounded">
+                class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer">
             Delete
         </button>
             <a href="/" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</a>

@@ -16,6 +16,7 @@ pub struct Todo {
     pub user_id: i64,
     pub title: String,
     pub due: Option<NaiveDate>,
+    pub effort: f64,
     pub completed: bool,
     pub notes: Option<String>,
 }

@@ -32,6 +32,11 @@
         "name": "notes",
         "ordinal": 5,
         "type_info": "Text"
+      },
+      {
+        "name": "effort",
+        "ordinal": 6,
+        "type_info": "Float"
       }
     ],
     "parameters": {
@@ -43,7 +48,8 @@
       false,
       true,
       false,
-      true
+      true,
+      false
     ]
   },
   "hash": "b5f1868cb60f334ed5930fd24f84b7f3e876e16b1f1cd141bb36a256467ede4e"
