@@ -21,14 +21,14 @@ docker run --name todopad -e ENV=development -e DATABASE_URL=sqlite://todopad.db
 
 
 TODO:
-0. Edit Insight
-    Delete Insight
-    After insight creation navigate to that insight
-    Show description of insight
+0. Edit Insight [Done]
+    Delete Insight [Done]
+    After insight creation navigate to that insight [Done]
     When adding tags 
-    a. message to press enter
-    b. selection of existing tags by arrows keys and enter
-    c. autocompletion tags pop-up position
+    a. message to press enter [Done]
+    b. selection of existing tags by arrows keys and enter [Done]
+    c. autocompletion tags pop-up position [Done]
+    c. adjust the chart in mobile [Done]
 
 
 1. when editing the title the tags are not regenerated. but when implementing this, need to careful
@@ -38,9 +38,9 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 2. Show data (relative day) in the list
 [Done]
 
-3. Parse any link in the notes and show links and open from todo item 
+3. Parse any link in the notes and show links and open from todo item [Done] 
 
-4. Refactor edit HTML
+4. Click on link icon is confusing esp i there is only one link
 
 5. Run google page insights - and fix the perf issues
 
@@ -53,5 +53,11 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 9. Color code on due dates that are passed
 
 10. logging with error (and alerts)
+
+11. Charts
+    a. count metric in charts
+    b. Show description of insight
+
+12. Refactor edit HTML
 
 

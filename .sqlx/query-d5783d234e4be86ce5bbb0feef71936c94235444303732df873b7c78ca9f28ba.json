@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE insights SET name=?, chart_type=?, metric=?, tags=?, description=?\n            where user_id=? AND id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "d5783d234e4be86ce5bbb0feef71936c94235444303732df873b7c78ca9f28ba"
+}

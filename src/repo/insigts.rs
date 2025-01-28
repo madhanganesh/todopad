@@ -75,14 +75,55 @@ pub async fn create_insight(pool: &SqlitePool, insight: &Insight)
     Ok(insight)
 }
 
-pub async fn get_insight(pool: &SqlitePool, user_id: i64, insight_id: i64) 
-    -> Result<Insight, sqlx::Error>
+pub async fn update_insight(pool: &SqlitePool, insight: &Insight) 
+    -> Result<Insight, InsightSaveError> 
 {
-    let insight = query_as!(Insight, "SELECT * FROM insights WHERE user_id = ? AND id=?", user_id, insight_id)
-            .fetch_one(pool)
-            .await?;
+    query_as!(Insight, 
+            r#"UPDATE insights SET name=?, chart_type=?, metric=?, tags=?, description=?
+            where user_id=? AND id=?"#,
+            insight.name,
+            insight.chart_type,
+            insight.metric,
+            insight.tags,
+            insight.description,
+            insight.user_id,
+            insight.id
+    )
+    .execute(pool)
+    .await
+    .map_err(map_sqlx_error)?;
+
+    let insight = sqlx::query_as!(
+        Insight,
+        "SELECT * FROM insights WHERE id = ?",
+        insight.id    
+    )
+    .fetch_one(pool)
+    .await?;
 
     Ok(insight)
+}
+
+pub async fn get_insight(pool: &SqlitePool, user_id: i64, insight_id: i64) 
+    -> Result<Insight, sqlx::Error> {
+
+    let insight = query_as!(Insight, 
+        "SELECT * FROM insights WHERE user_id = ? AND id=?", user_id, insight_id
+        )
+        .fetch_one(pool)
+        .await?;
+
+    Ok(insight)
+}
+
+pub async fn delete_insight(pool: &SqlitePool, user_id: i64, insight_id: i64) 
+    -> Result<(), sqlx::Error> {
+
+    query_as!(Todo, "DELETE from insights where user_id=? and id=?", user_id, insight_id)
+        .execute(pool)
+        .await?;
+
+    Ok(()) 
 }
 
 pub async fn get_efforts(
@@ -234,7 +275,7 @@ fn get_effort_grouped_by_tags_query(filter: &str, tags_place_holder: &str) -> St
 }
 
 fn for_day() -> &'static str {
-    "STRFTIME('%d', due) || ' ' || SUBSTR('JanFebMarAprMayJunJulAugSepOctNovDec', 1 + 3 * (STRFTIME('%m', due) - 1), 3)"
+    "STRFTIME('%d', todos.due) || ' ' || SUBSTR('JanFebMarAprMayJunJulAugSepOctNovDec', 1 + 3 * (STRFTIME('%m', todos.due) - 1), 3)"
 }
 
 fn for_day_range() -> &'static str {
@@ -242,11 +283,12 @@ fn for_day_range() -> &'static str {
 }
 
 fn for_week() -> &'static str {
-    "STRFTIME('%d', todos.due) || ' ' || SUBSTR('JanFebMarAprMayJunJulAugSepOctNovDec', 1 + 3 * (STRFTIME('%m', todos.due) - 1), 3)"
+    "STRFTIME('%d', DATE(todos.due, 'weekday 0', '-6 days')) || ' ' || 
+    SUBSTR('JanFebMarAprMayJunJulAugSepOctNovDec', 1 + 3 * (STRFTIME('%m', DATE(todos.due, 'weekday 0', '-6 days')) - 1), 3)"
 }
 
 fn for_week_range() -> &'static str {
-    "DATE('now', 'weekday 0', '-6 days') AND DATE('now')"
+    "DATE('now', '-35 days', 'weekday 0', '-6 days') AND DATE('now', 'weekday 0')"
 }
  
 fn for_month() -> &'static str {

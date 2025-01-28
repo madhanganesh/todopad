@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE from insights where user_id=? and id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "9bcb71da178615ae571d1077d2568d7e3017df1333ed93eacbb0c224c1353be9"
+}

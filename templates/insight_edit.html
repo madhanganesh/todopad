@@ -12,47 +12,68 @@
 
 
     <form id="insight-form" hx-post="/insights/save" hx-trigger="submit" hx-target="body">
+        {% if is_edit %}
+        <input type="hidden" name="id" id="id" value="{{ insight.id.as_ref().unwrap() }}">
+        {% endif %}
         
         <!-- Name Input -->
         <label class="block mb-2 font-medium">Name</label>
-        <input type="text" name="name" value="{{ insight.name }}" class="w-full p-2 border rounded" autofocus required>
-
-        <!-- Description Textarea -->
-        <label class="block mt-4 mb-2 font-medium">Description</label>
-        <textarea name="description" class="w-full h-24 p-2 border rounded resize-none" required>
-            {% if insight.description.is_some() %}{{ insight.description.as_ref().unwrap() }}{% endif %}
-        </textarea>
-
-        <!-- Metric Dropdown -->
-        <label class="block mt-4 mb-2 font-medium">Metric</label>
-        <select name="metric" class="w-full p-2 border rounded">
-            <option value="effort" {% if insight.metric == "Effort" %}selected{% endif %}>Effort</option>
-            <option value="count" {% if insight.metric == "Count" %}selected{% endif %}>Count</option>
-        </select>
+        <input type="text" name="name" value="{{ insight.name }}" class="w-full p-2 border rounded" placeholder="Name of the insight" autofocus required>
 
         <!-- Chart Type Dropdown -->
+        <div>
         <label class="block mt-4 mb-2 font-medium">Chart Type</label>
         <select name="chart_type" class="w-full p-2 border rounded">
-            <option value="Line" {% if insight.chart_type == "Line" %}selected{% endif %}>Line</option>
-            <option value="Bar" {% if insight.chart_type == "Bar" %}selected{% endif %}>Bar</option>
-            <option value="Pie" {% if insight.chart_type == "Pie" %}selected{% endif %}>Pie</option>
+            <option value="line" {% if insight.chart_type == "Line" %}selected{% endif %}>Line</option>
+            <option value="bar" {% if insight.chart_type == "Bar" %}selected{% endif %}>Bar</option>
+            <option value="pie" {% if insight.chart_type == "Pie" %}selected{% endif %}>Pie</option>
         </select>
+        </div>
 
         <!-- Tags Input -->
+        <div>
         <label class="block mt-4 mb-2 font-medium">Tags</label>
 <div id="tag-container" class="flex flex-wrap border p-2 rounded">
-    <input type="text" id="tag-input" class="p-2 border-none outline-none flex-1" placeholder="Type to add tags">
+    <input type="text" id="tag-input" class="border-none outline-none flex-1" placeholder="Group by tags (if required). Select tag and press enter">
 </div>
 <input type="hidden" name="tags" id="tags-hidden" value="{% if insight.tags.is_some() %}{{ insight.tags.as_ref().unwrap() }}{% endif %}">
 
 <ul id="tag-suggestions" class="border bg-white absolute hidden mt-1 w-full max-w-xs shadow-md"></ul>
+    </div>
+
+        <!-- Description Textarea -->
+        <div>
+        <label class="block mt-4 mb-2 font-medium">Description</label>
+        <textarea name="description" class="w-full p-2 border rounded resize-none" style="height: 2.5rem;" placeholder="Description of what the chart displays">{% if insight.description.is_some() %}{{ insight.description.as_ref().unwrap() }}{% endif %}</textarea>
+        </div>
+
+        <!-- Metric Dropdown -->
+        <div class="hidden">
+        <label class="block mt-4 mb-2 font-medium">Metric</label>
+        <select name="metric" class="w-full p-2 border rounded">
+            <option value="effort" {% if insight.metric == "Effort" %}selected{% endif %}>Effort</option>
+            <!--option value="count" {% if insight.metric == "Count" %}selected{% endif %}>Count</option-->
+        </select>
+        </div>
 
         <!-- Buttons -->
-        <div class="flex justify-between mt-6">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        <div class="flex justify-start items-center gap-3 mt-6">
+            <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 cursor-pointer">
                 {% if is_edit %}Save Changes{% else %}Create Insight{% endif %}
             </button>
-            <a href="/insights" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+
+            {% if insight.id.is_some() %}
+            <button type="button" 
+                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 cursor-pointer"
+                hx-delete="/insights/{{ insight.id.unwrap() }}"
+                hx-confirm="Are you sure you want to delete this insight?"
+                hx-target="body"
+                hx-swap="outerHTML">
+                Delete 
+            </button>
+            {% endif %}
+
+            <a href="/insights" class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">
                 Cancel
             </a>
         </div>
@@ -62,96 +83,138 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", reload);
+document.addEventListener("DOMContentLoaded", function () {
+    const tagInput = document.getElementById("tag-input");
+    const tagContainer = document.getElementById("tag-container");
+    const tagsHidden = document.getElementById("tags-hidden");
+    const tagSuggestions = document.getElementById("tag-suggestions");
 
-    function reload() {
-        const tagInput = document.getElementById("tag-input");
-        const tagContainer = document.getElementById("tag-container");
-        const tagsHidden = document.getElementById("tags-hidden");
-        const tagSuggestions = document.getElementById("tag-suggestions");
+    let tags = tagsHidden.value ? tagsHidden.value.split(",").map(t => t.trim()).filter(t => t.length > 0) : [];
+    let allTags = []; // Stores all available tags fetched from the backend
+    let selectedIndex = -1; // Track selected item in the dropdown
 
-        let tags = tagsHidden.value ? tagsHidden.value.split(",").map(t => t.trim()).filter(t => t.length > 0) : [];
-        let allTags = []; // Stores all available tags fetched from the backend
-
-        function renderTags() {
-            tagContainer.innerHTML = "";
-            tags.forEach(tag => {
-                let chip = document.createElement("div");
-                chip.className = "bg-gray-200 text-sm px-2 py-1 m-1 rounded flex items-center";
-                chip.innerHTML = `${tag} <span class="ml-2 cursor-pointer text-red-500" onclick="removeTag('${tag}')">&times;</span>`;
-                tagContainer.appendChild(chip);
-            });
-            tagContainer.appendChild(tagInput);
-            tagsHidden.value = tags.join(",");
-        }
-
-        function removeTag(tag) {
-            tags = tags.filter(t => t !== tag);
-            renderTags();
-        }
-
-        function showSuggestions(matches) {
-            tagSuggestions.innerHTML = "";
-            if (matches.length === 0) {
-                tagSuggestions.classList.add("hidden");
-                return;
-            }
-
-            tagSuggestions.classList.remove("hidden");
-
-            matches.forEach(tag => {
-                let suggestion = document.createElement("li");
-                suggestion.className = "px-2 py-1 cursor-pointer hover:bg-gray-100";
-                suggestion.textContent = tag;
-                suggestion.addEventListener("click", function () {
-                    if (!tags.includes(tag)) {
-                        tags.push(tag);
-                        renderTags();
-                    }
-                    tagInput.value = "";
-                    tagSuggestions.classList.add("hidden");
-                });
-                tagSuggestions.appendChild(suggestion);
-            });
-        }
-
-        tagInput.addEventListener("input", function () {
-            let query = tagInput.value.toLowerCase();
-            let matches = allTags.filter(tag => tag.toLowerCase().includes(query));
-            showSuggestions(matches);
+    function renderTags() {
+        tagContainer.innerHTML = "";
+        tags.forEach(tag => {
+            let chip = document.createElement("div");
+            chip.className = "bg-gray-200 text-sm px-2 py-1 m-1 rounded flex items-center";
+            chip.innerHTML = `${tag} <span class="ml-2 cursor-pointer text-red-500" onclick="removeTag('${tag}')">&times;</span>`;
+            tagContainer.appendChild(chip);
         });
+        tagContainer.appendChild(tagInput);
+        tagsHidden.value = tags.join(",");
+    }
 
-        tagInput.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault(); // Prevent form submission
-                let tag = tagInput.value.trim();
-                if (tag && !tags.includes(tag)) {
-                    tags.push(tag);
-                    renderTags();
-                    tagInput.value = "";
-                }
-                tagSuggestions.classList.add("hidden");
-            } else if (event.key === "Backspace" && tagInput.value === "") {
-                tags.pop();
-                renderTags();
-            }
-        });
-
-        document.addEventListener("click", function (event) {
-            if (!tagContainer.contains(event.target) && !tagSuggestions.contains(event.target)) {
-                tagSuggestions.classList.add("hidden");
-            }
-        });
-
-        // Fetch tags from the backend
-        fetch("/tags")
-            .then(response => response.json())
-            .then(data => {
-                allTags = data.tags || [];
-            })
-            .catch(error => console.error("Error fetching tags:", error));
-
+    function removeTag(tag) {
+        tags = tags.filter(t => t !== tag);
         renderTags();
     }
+
+    function showSuggestions(matches) {
+        tagSuggestions.innerHTML = "";
+        selectedIndex = -1; // Reset selection
+
+        if (matches.length === 0) {
+            tagSuggestions.classList.add("hidden");
+            return;
+        }
+
+        tagSuggestions.classList.remove("hidden");
+        tagSuggestions.style.width = `${tagInput.offsetWidth}px`; // ✅ Match input width
+
+        matches.forEach((tag, index) => {
+            let suggestion = document.createElement("li");
+            suggestion.className = "px-2 py-1 cursor-pointer hover:bg-gray-100";
+            suggestion.textContent = tag;
+            suggestion.setAttribute("data-index", index);
+            
+            suggestion.addEventListener("click", function () {
+                if (!tags.includes(tag)) {
+                    tags.push(tag);
+                    renderTags();
+                }
+                tagInput.value = "";
+                tagSuggestions.classList.add("hidden");
+                tagInput.focus(); 
+            });
+
+            tagSuggestions.appendChild(suggestion);
+        });
+    }
+
+    tagInput.addEventListener("input", function () {
+        let query = tagInput.value.toLowerCase();
+        let matches = allTags.filter(tag => tag.toLowerCase().includes(query));
+        showSuggestions(matches);
+    });
+
+    tagInput.addEventListener("keydown", function (event) {
+        let suggestions = tagSuggestions.querySelectorAll("li");
+
+        if (event.key === "ArrowDown" && suggestions.length > 0) {
+            event.preventDefault();
+            if (selectedIndex < suggestions.length - 1) {
+                selectedIndex++;
+            }
+            updateSuggestionHighlight(suggestions);
+        } else if (event.key === "ArrowUp" && suggestions.length > 0) {
+            event.preventDefault();
+            if (selectedIndex > 0) {
+                selectedIndex--;
+            }
+            updateSuggestionHighlight(suggestions);
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+                let selectedTag = suggestions[selectedIndex].textContent;
+                if (!tags.includes(selectedTag)) {
+                    tags.push(selectedTag);
+                    renderTags();
+                }
+                tagInput.value = "";
+                tagSuggestions.classList.add("hidden");
+                tagInput.focus(); 
+            } else {
+                let newTag = tagInput.value.trim();
+                if (newTag && !tags.includes(newTag)) {
+                    tags.push(newTag);
+                    renderTags();
+                }
+                tagInput.value = "";
+                tagSuggestions.classList.add("hidden");
+                tagInput.focus(); 
+            }
+        } else if (event.key === "Backspace" && tagInput.value === "") {
+            tags.pop();
+            renderTags();
+        }
+    });
+
+    function updateSuggestionHighlight(suggestions) {
+        suggestions.forEach((s, i) => {
+            if (i === selectedIndex) {
+                s.classList.add("bg-gray-300");
+            } else {
+                s.classList.remove("bg-gray-300");
+            }
+        });
+    }
+
+    document.addEventListener("click", function (event) {
+        if (!tagContainer.contains(event.target) && !tagSuggestions.contains(event.target)) {
+            tagSuggestions.classList.add("hidden");
+        }
+    });
+
+    fetch("/tags")
+        .then(response => response.json())
+        .then(data => {
+            allTags = data.tags || [];
+        })
+        .catch(error => console.error("Error fetching tags:", error));
+
+    renderTags();
+});
 </script>
+
 {% endblock %}
