@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select distinct(tag) \n        from tags \n        where user_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "tag",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "df6da8e62ec3029f49676d1ba23ea0aae25e35084aa1046e4952b126d5b39ded"
+}

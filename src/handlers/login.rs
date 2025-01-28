@@ -9,7 +9,7 @@ use serde::Deserialize;
 use sqlx::SqlitePool;
 use jsonwebtoken::{encode, EncodingKey, Header};
 
-use crate::{repo::{self, get_user_from_email}, utils::{self, verify_password}};
+use crate::{repo::{self, todo::get_user_from_email}, utils::{self, verify_password}};
 use super::{BaseTemplate, Claims};
 
 const SECRET: &[u8] = b"my_secret_key";
@@ -91,7 +91,7 @@ pub async fn register_handler(
         }
     };
 
-    match repo::register_user(&pool, &form.email, &password_hash).await {
+    match repo::todo::register_user(&pool, &form.email, &password_hash).await {
         Ok(user_id) => {
             set_cookie_and_redirect(user_id)
         }

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row mt-10">
+    <section class="w-full bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-6 justify-around">
+            <div class="flex items-center gap-2">
+                <h2 class="font-semibold">Insight: </h2>
+                <select 
+                    id="insight" 
+                    name="insight"
+                    class="border rounded px-2 py-1 cursor-pointer"  
+                    onchange="updateChart()"
+                >
+                    {% for insight in insights %}
+                    <option value="{{ insight.id }}">{{ insight.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <h2 class="font-semibold">Period: </h2>
+                <select 
+                    id="period"
+                    name="period"
+                    class="border rounded px-2 py-1 cursor-pointer"  
+                    onchange="updateChart()"
+                >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </div>
+        </div>
+        <canvas id="effortChart" width="400" height="200"></canvas>
+
+        <div class="flex justify-start mt-6 gap-4">
+            <a href="/insights/new" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                New Insight
+            </a>
+            <a href="/insights/update/{insight.id}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Edit Insight
+            </a>
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script>
+    let effortChart = null; // Store the Chart instance globally
+
+    function resetChartCanvas() {
+        let canvasParent = document.getElementById('effortChart').parentNode;
+        let newCanvas = document.createElement("canvas");
+        newCanvas.id = "effortChart";
+        newCanvas.width = 400;
+        newCanvas.height = 200;
+        canvasParent.replaceChild(newCanvas, document.getElementById('effortChart'));
+    }
+
+    function updateChart() {
+        let period = document.getElementById("period").value;
+        let insightId = document.getElementById("insight").value;
+
+        fetch(`/insights/${insightId}/data?period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                // ✅ Reset the canvas to fully clear previous chart
+                resetChartCanvas();
+                let ctx = document.getElementById('effortChart').getContext('2d');
+                // ✅ Destroy the previous chart instance if it exists
+                if (effortChart !== null) {
+                    effortChart.destroy();
+                }
+                // ✅ Create a new Chart instance with fresh data
+                effortChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: Object.keys(data.data_sets).map(key => ({
+                            label: key,
+                            data: data.data_sets[key],
+                            tension: 0.3,
+                            borderWidth: 3,
+                        })),
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { beginAtZero: true },
+                            y: { beginAtZero: true }
+                        },
+                        plugins: {
+                            datalabels: {
+                                display: true,
+                                align: 'top',
+                                color: 'black',
+                                font: {
+                                    weight: 'thin',
+                                    size: 10
+                                },
+                                formatter: function(value) {
+                                    return `${value}`;
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                align: 'start',
+                                labels: {
+                                    font: {
+                                        size: 14,
+                                        weight: 'bold'
+                                    },
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyle: 'line',
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error("Error updating chart:", error));
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateChart(); // ✅ Ensure the chart updates when the page loads
+    });
+</script>
+{% endblock %}
+

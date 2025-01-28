@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-4 rounded-lg shadow w-full">
+    <h2 class="text-xl font-bold mb-4">{% if is_edit %}Edit{% else %}Create{% endif %} Insight</h2>
+
+    {% if let Some(error) = error %}
+    <div class="bg-red-100 text-red-700 p-3 rounded mb-4" id="error-message">
+        {{ error }}
+    </div>
+    {% endif %}
+
+
+    <form id="insight-form" hx-post="/insights/save" hx-trigger="submit" hx-target="body">
+        
+        <!-- Name Input -->
+        <label class="block mb-2 font-medium">Name</label>
+        <input type="text" name="name" value="{{ insight.name }}" class="w-full p-2 border rounded" autofocus required>
+
+        <!-- Description Textarea -->
+        <label class="block mt-4 mb-2 font-medium">Description</label>
+        <textarea name="description" class="w-full h-24 p-2 border rounded resize-none" required>
+            {% if insight.description.is_some() %}{{ insight.description.as_ref().unwrap() }}{% endif %}
+        </textarea>
+
+        <!-- Metric Dropdown -->
+        <label class="block mt-4 mb-2 font-medium">Metric</label>
+        <select name="metric" class="w-full p-2 border rounded">
+            <option value="effort" {% if insight.metric == "Effort" %}selected{% endif %}>Effort</option>
+            <option value="count" {% if insight.metric == "Count" %}selected{% endif %}>Count</option>
+        </select>
+
+        <!-- Chart Type Dropdown -->
+        <label class="block mt-4 mb-2 font-medium">Chart Type</label>
+        <select name="chart_type" class="w-full p-2 border rounded">
+            <option value="Line" {% if insight.chart_type == "Line" %}selected{% endif %}>Line</option>
+            <option value="Bar" {% if insight.chart_type == "Bar" %}selected{% endif %}>Bar</option>
+            <option value="Pie" {% if insight.chart_type == "Pie" %}selected{% endif %}>Pie</option>
+        </select>
+
+        <!-- Tags Input -->
+        <label class="block mt-4 mb-2 font-medium">Tags</label>
+<div id="tag-container" class="flex flex-wrap border p-2 rounded">
+    <input type="text" id="tag-input" class="p-2 border-none outline-none flex-1" placeholder="Type to add tags">
+</div>
+<input type="hidden" name="tags" id="tags-hidden" value="{% if insight.tags.is_some() %}{{ insight.tags.as_ref().unwrap() }}{% endif %}">
+
+<ul id="tag-suggestions" class="border bg-white absolute hidden mt-1 w-full max-w-xs shadow-md"></ul>
+
+        <!-- Buttons -->
+        <div class="flex justify-between mt-6">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                {% if is_edit %}Save Changes{% else %}Create Insight{% endif %}
+            </button>
+            <a href="/insights" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    <div id="response"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", reload);
+
+    function reload() {
+        const tagInput = document.getElementById("tag-input");
+        const tagContainer = document.getElementById("tag-container");
+        const tagsHidden = document.getElementById("tags-hidden");
+        const tagSuggestions = document.getElementById("tag-suggestions");
+
+        let tags = tagsHidden.value ? tagsHidden.value.split(",").map(t => t.trim()).filter(t => t.length > 0) : [];
+        let allTags = []; // Stores all available tags fetched from the backend
+
+        function renderTags() {
+            tagContainer.innerHTML = "";
+            tags.forEach(tag => {
+                let chip = document.createElement("div");
+                chip.className = "bg-gray-200 text-sm px-2 py-1 m-1 rounded flex items-center";
+                chip.innerHTML = `${tag} <span class="ml-2 cursor-pointer text-red-500" onclick="removeTag('${tag}')">&times;</span>`;
+                tagContainer.appendChild(chip);
+            });
+            tagContainer.appendChild(tagInput);
+            tagsHidden.value = tags.join(",");
+        }
+
+        function removeTag(tag) {
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        function showSuggestions(matches) {
+            tagSuggestions.innerHTML = "";
+            if (matches.length === 0) {
+                tagSuggestions.classList.add("hidden");
+                return;
+            }
+
+            tagSuggestions.classList.remove("hidden");
+
+            matches.forEach(tag => {
+                let suggestion = document.createElement("li");
+                suggestion.className = "px-2 py-1 cursor-pointer hover:bg-gray-100";
+                suggestion.textContent = tag;
+                suggestion.addEventListener("click", function () {
+                    if (!tags.includes(tag)) {
+                        tags.push(tag);
+                        renderTags();
+                    }
+                    tagInput.value = "";
+                    tagSuggestions.classList.add("hidden");
+                });
+                tagSuggestions.appendChild(suggestion);
+            });
+        }
+
+        tagInput.addEventListener("input", function () {
+            let query = tagInput.value.toLowerCase();
+            let matches = allTags.filter(tag => tag.toLowerCase().includes(query));
+            showSuggestions(matches);
+        });
+
+        tagInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent form submission
+                let tag = tagInput.value.trim();
+                if (tag && !tags.includes(tag)) {
+                    tags.push(tag);
+                    renderTags();
+                    tagInput.value = "";
+                }
+                tagSuggestions.classList.add("hidden");
+            } else if (event.key === "Backspace" && tagInput.value === "") {
+                tags.pop();
+                renderTags();
+            }
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!tagContainer.contains(event.target) && !tagSuggestions.contains(event.target)) {
+                tagSuggestions.classList.add("hidden");
+            }
+        });
+
+        // Fetch tags from the backend
+        fetch("/tags")
+            .then(response => response.json())
+            .then(data => {
+                allTags = data.tags || [];
+            })
+            .catch(error => console.error("Error fetching tags:", error));
+
+        renderTags();
+    }
+</script>
+{% endblock %}

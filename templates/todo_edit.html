@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="max-w-xl mx-auto bg-white p-4 rounded-lg shadow w-full">
-    <h2 class="text-xl font-bold mb-4">Edit Todo</h2>
     {% if error.is_some() %}
     <div class="bg-red-500 text-white p-2 rounded mb-4">
         {{ error.as_ref().unwrap() }}
@@ -103,12 +102,6 @@
 </div> 
 
 <script>
-    function redirectToHome() {
-        alert('here');
-        setTimeout(() => {
-            window.location.replace('/');  // Force full page reload to "/"
-        }, 100);
-    }
     function handleTagInput(event) {
         if (event.key === 'Enter' || event.key === ',') {
             event.preventDefault();

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO insights (user_id, name, description, metric, chart_type, periods) \n            VALUES (?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "a0f4894a71b631e281816e190325791ed9d478c6e9616cd0cea0497f52fc0d4f"
+}

@@ -8,7 +8,7 @@ use axum::{
 };
 use chrono::NaiveDate;
 use hyper::StatusCode;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use sqlx::SqlitePool;
 use tower_sessions::Session;
 
@@ -36,7 +36,7 @@ pub async fn create_todo(
     let filter: String = session.get("filter").await.unwrap().unwrap_or("pending".to_string());
     let (due, show_date) = super::get_date_and_show_date(&filter); 
 
-    match repo::create_todo(&pool, user.user_id, &form.title, &due).await {
+    match repo::todo::create_todo(&pool, user.user_id, &form.title, &due).await {
         Ok(todo) => {
             let template = TodoTemplate { todo: &todo, show_date };
             spawn_get_tags_and_save(&pool, user.user_id, todo.id, todo.title.clone());
@@ -77,7 +77,7 @@ pub async fn delete_todo(
     State(pool): State<Arc<SqlitePool>>,
     Path(id): Path<i64>,
 ) -> StatusCode {
-    match repo::delete_todo(&pool, user.user_id, id).await {
+    match repo::todo::delete_todo(&pool, user.user_id, id).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
@@ -88,7 +88,7 @@ pub async fn toggle_todo(
     State(pool): State<Arc<SqlitePool>>,
     Path(id): Path<i64>,
 ) -> StatusCode {
-    match repo::toggle_todo(&pool, user.user_id, id).await {
+    match repo::todo::toggle_todo(&pool, user.user_id, id).await {
         Ok(_) => StatusCode::OK,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
@@ -100,7 +100,7 @@ pub async fn get_tags_for_todo(
     Path(id): Path<i64>,  
 ) -> Result<Json<Vec<String>>, axum::response::Response> {
 
-    match repo::get_tags_for_todo(&pool, user.user_id, id).await {
+    match repo::todo::get_tags_for_todo(&pool, user.user_id, id).await {
         Ok(tags) => Ok(Json(tags)), 
         Err(err) => {
             eprintln!("Error fetching tags: {:?}", err);
@@ -129,8 +129,8 @@ async fn get_todo_response(
     err: Option<String>
 ) -> Response {
 
-    let tags = repo::get_tags_for_todo(pool, user_id, todo_id).await.unwrap_or(vec![]);
-    match repo::get_todo(pool, user_id, todo_id).await {
+    let tags = repo::todo::get_tags_for_todo(pool, user_id, todo_id).await.unwrap_or(vec![]);
+    match repo::todo::get_todo(pool, user_id, todo_id).await {
         Ok(todo) => {
             let template = EditTodoTemplate {
                 base: BaseTemplate::new(headers).await,
@@ -192,16 +192,17 @@ pub async fn update_todo(
         _ => None,
     };
 
-    let result = repo::update_todo(
-        &pool, 
-        user.user_id, 
-        todo_id, form.title.clone(), 
-        due, 
-        form.effort,
-        form.completed.is_some(), 
-        form.notes
-    ).await;
+    let todo = Todo {
+        id: todo_id,
+        user_id: user.user_id,
+        title: form.title.clone(),
+        due,
+        effort: form.effort,
+        completed: form.completed.is_some(),
+        notes: form.notes.clone(),
+    };
 
+    let result = repo::todo::update_todo( &pool, &todo).await;
 
     match result {
         Ok(_) => {
@@ -231,7 +232,7 @@ pub async fn delete_todo_from_edit(
     State(pool): State<Arc<SqlitePool>>,
     Path(todo_id): Path<i64>,
 ) -> Response {
-    let result = repo::delete_todo(&pool, user.user_id, todo_id).await;
+    let result = repo::todo::delete_todo(&pool, user.user_id, todo_id).await;
     match result {
         Ok(_) => {
             Response::builder()
@@ -260,14 +261,28 @@ async fn update_tags(pool: &SqlitePool, user_id: i64, todo_id: i64, title: Strin
         .filter(|s| !s.is_empty())
         .collect();
 
-    if let Ok(current_tags) = repo::get_tags_for_todo(pool, user_id, todo_id).await {
+    if let Ok(current_tags) = repo::todo::get_tags_for_todo(pool, user_id, todo_id).await {
         if current_tags == tags {
             spawn_get_tags_and_save(pool, user_id, todo_id, title);
         } else {
-            match repo::save_tags(pool, user_id, todo_id, tags).await {
+            match repo::todo::save_tags(pool, user_id, todo_id, tags).await {
                 Ok(_) => (),
                 Err(err) => eprintln!("Error while saving tags: {:?}", err)
             }
         }
     }
+}
+
+#[derive(Serialize)]
+struct TagResponse {
+    tags: Vec<String>,
+}
+
+pub async fn get_tags(
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>
+) -> impl IntoResponse {
+    let tags = repo::todo::get_tags(&pool, user.user_id).await.unwrap();
+
+    Json(TagResponse { tags} )
 }

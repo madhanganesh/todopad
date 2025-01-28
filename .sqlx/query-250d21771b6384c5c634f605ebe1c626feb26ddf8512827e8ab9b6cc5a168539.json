@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM insights WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "user_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "metric",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "chart_type",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "periods",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "tags",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "250d21771b6384c5c634f605ebe1c626feb26ddf8512827e8ab9b6cc5a168539"
+}

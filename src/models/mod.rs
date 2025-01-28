@@ -35,9 +35,6 @@ impl Todo {
             0 => "today".to_string(),
             1 => "tomorrow".to_string(),
             -1 => "yesterday".to_string(),
-            //n if n > 1 => format!("{} days later", n),
-            //n if n < -1 => format!("{} days back", -n),
-            //_ => unreachable!(),
             _ => due.format("%d %b").to_string(),
         }
     }
@@ -57,4 +54,16 @@ pub struct Tag {
     pub user_id: i64,
     pub todo_id: i64,
     pub tag: String,
+}
+
+#[derive(Debug, Serialize, FromRow)]
+pub struct Insight {
+    pub id: i64,
+    pub user_id: i64,
+    pub name: String,
+    pub description: Option<String>,
+    pub metric: String,
+    pub chart_type: String,
+    pub tags: Option<String>,
+    pub periods: Option<String>,
 }

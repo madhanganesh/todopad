@@ -3,6 +3,7 @@ pub mod auth;
 pub mod index;
 pub mod login;
 pub mod todo;
+pub mod insights;
 
 use std::env;
 use askama::Template;
@@ -15,8 +16,8 @@ use serde::{Deserialize, Serialize};
 use auth::validate_cookie;
 use sqlx::SqlitePool;
 
-use crate::{models::Todo, repo::{get_pending_todos, get_todos_for_date}, utils::tags::get_tags};
-use crate::repo::save_tags;
+use crate::{models::Todo, repo::todo::{get_pending_todos, get_todos_for_date}, utils::tags::get_tags};
+use crate::repo::todo::save_tags;
 
 const SECRET: &[u8] = b"my_secret_key";
 
@@ -68,6 +69,7 @@ impl BaseTemplate {
         if validate_cookie(&headers).await.is_ok() {
             navs =  vec![
                 NavItem{name: "todos".to_string(), url: "/".to_string()},
+                NavItem{name: "insights".to_string(), url: "/insights".to_string()},
                 NavItem{name: "about".to_string(), url: "/about".to_string()},
                 NavItem{name: "logout".to_string(), url: "/logout".to_string()},
             ];

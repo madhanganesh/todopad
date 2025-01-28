@@ -18,7 +18,8 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use handlers::index::index;
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler, register_page, register_handler};
-use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit};
+use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit, get_tags};
+use handlers::insights::{insights_page, get_insight_data, new_insight, save_insight};
 use handlers::auth::auth_middleware;
 
 #[derive(Clone)]
@@ -70,6 +71,11 @@ async fn main() {
         .route("/todos/_edit/{id}", delete(delete_todo_from_edit))
         .route("/todos/{id}/toggle", post(toggle_todo))
         .route("/todos/{id}/tags", get(get_tags_for_todo))
+        .route("/tags", get(get_tags))
+        .route("/insights", get(insights_page))
+        .route("/insights/save", post(save_insight))
+        .route("/insights/new", get(new_insight))
+        .route("/insights/{id}/data", get(get_insight_data))
         .route_layer(middleware::from_fn(auth_middleware));
 
     let routes = public_routes

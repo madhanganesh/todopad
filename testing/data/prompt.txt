@@ -1,0 +1,23 @@
+I have the below tags and todo tables using sqlite. Can you generate a SQL Script that will insert test data into these tables. Generate 300 todos over last 3 months like 5 to 7 todos each workday. Also generate tags for each of these todos. The tags should have 4 tags for each todo. [Project, Module, Kind, Type]. You can generate random Project and its modules. There are 2 Types ['Management', 'Technical']. The Kinds ['Coordination', 'Meeting', 'Planning', 'People Issues', 'HR Items', 'Project Management', etc] belongs to 'Management' type. Like wise the Kinds ['Learning', 'Design', 'Architecture', 'Analysis', 'Coding', 'Code Review', 'Design Review', 'Tech Meeting'] belongs to 'Technical'. Add the todo ID in the script itself. For user_id always use 1. For effort generate random effort from 0.5 to 2.5. For completed set to true for 95% and false for 5%. In notes add a link 'https://google.com' and another random website. The sample todo could be {id: 1, user_id: 1, title: 'Code tags module of todo', due: '2025-01-24', effort: 2.5,  completed: true, notes: 'https://google.com https://medium.com' } . Give a single SQL script and let me know how to import into my test sqlite db. And below is the schema on todos and tags table:
+
+// todos
+CREATE TABLE todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    due DATE DEFAULT (DATE('now')),
+    completed BOOLEAN NOT NULL DEFAULT 0,
+    notes TEXT, effort FLOAT NOT NULL DEFAULT 1.0,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+// tags
+CREATE TABLE tags (
+    user_id INTEGER NOT NULL,
+    todo_id INTEGER NOT NULL,
+    tag TEXT NOT NULL,
+    PRIMARY KEY (user_id, todo_id, tag),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (todo_id) REFERENCES todos (id) ON DELETE CASCADE
+); 
+    
