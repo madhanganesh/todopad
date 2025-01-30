@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use sqlx::{SqlitePool, query_as, Row, Error as SqlxError};
 use thiserror::Error;
@@ -174,21 +174,37 @@ pub async fn get_efforts_by_tags(
         .await
         .unwrap();
 
-    let mut labels: Vec<String> = Vec::new();
-    let mut seen_labels = std::collections::HashSet::new();
-    let mut values: HashMap<String, Vec<f64>> = HashMap::new();
+    let mut data = vec![];
     for row in rows {
         let label: String = row.get("period");
-        if seen_labels.insert(label.clone()) {
-            labels.push(label);
-        }
-        let key: String = row.get("tag");
-        values.entry(key).or_default().push(row.get("value"));
+        let tag: String = row.get("tag");
+        let effort: f64 = row.get("value");
+
+        data.push((label.clone(), tag.clone(), effort));
     }
 
-    Ok((labels, values))
+    let grouped_data = get_grouped_data(data);
+    Ok(grouped_data)
 }
 
+fn get_grouped_data(data: Vec<(String, String, f64)>) 
+-> (Vec<String>, HashMap<String, Vec<f64>>) 
+{
+    let mut date_set: BTreeSet<String> = BTreeSet::new();
+    for (date, _, _) in &data {
+        date_set.insert(date.clone()); 
+    }
+    let dates: Vec<String> = date_set.into_iter().collect();
+    let mut efforts: HashMap<String, Vec<f64>> = HashMap::new();
+    for (date, tag, effort) in &data {
+        let entry = efforts.entry(tag.clone()).or_insert_with(|| vec![0.0; dates.len()]);
+        if let Some(pos) = dates.iter().position(|d| d == date) {
+            entry[pos] = *effort;
+        }
+    }
+
+    (dates, efforts) 
+}
 
 fn map_sqlx_error(err: SqlxError) -> InsightSaveError {
     if let SqlxError::Database(db_err) = &err {

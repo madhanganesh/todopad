@@ -6,8 +6,13 @@
             {% if todo.completed %}checked{% endif %}
             hx-post="/todos/{{ todo.id }}/toggle"
             hx-trigger="change"
-            hx-target="#todo-{{ todo.id }}"
-            hx-swap="outerHTML"
+            hx-on::after-request="
+            if (event.detail.successful && event.detail.xhr.responseText) { 
+                let response = JSON.parse(event.detail.xhr.responseText); 
+                if (response.filter === 'pending') { 
+                    document.getElementById('todo-{{ todo.id }}').remove();
+                } 
+            }"
             class="cursor-pointer"
         >
         

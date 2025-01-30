@@ -19,6 +19,8 @@ docker run --name todopad -e ENV=development -e DATABASE_URL=sqlite://todopad.db
 
 --env-file .env
 
+fly ssh console -a todopad  
+
 
 TODO:
 0. Edit Insight [Done]
@@ -30,6 +32,11 @@ TODO:
     c. autocompletion tags pop-up position [Done]
     c. adjust the chart in mobile [Done]
 
+
+bugs
+====
+[ ] Bar Chart and Pie Graps are coming wrong
+[ ] On completipn should not remove other than Pending
 
 1. when editing the title the tags are not regenerated. but when implementing this, need to careful
 that if user has given any tags explicitly - then no need to regenarate the tags again
