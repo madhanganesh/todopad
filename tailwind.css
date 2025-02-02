@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'Bai Jamjuree';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/static/fonts/BaiJamjuree-Regular.ttf') format('ttf');
+}
+
+@font-face {
+  font-family: 'Bai Jamjuree';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/static/fonts/BaiJamjuree-SemiBold.ttf') format('ttf');
+}
+
+@config "./tailwind.config.js";
+
+@import "tailwindcss";

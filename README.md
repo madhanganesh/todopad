@@ -14,7 +14,7 @@ apt-get update && apt-get install -y sqlite3
 
 docker build -t todopad .
 
-docker run --name todopad -e ENV=development -e DATABASE_URL=sqlite://todopad.db -e SQLX_OFFLINE=true -e RUST_LOG=debug -e OPENAI_API_KEY=<key> -p 8080:8080 todopad
+docker run --name todopad -e ENV=release -e DATABASE_URL=sqlite://todopad.db -e SQLX_OFFLINE=true -e RUST_LOG=error -e OPENAI_API_KEY=<key> -p 8080:8080 todopad
 
 
 --env-file .env
