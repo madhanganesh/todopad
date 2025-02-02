@@ -32,5 +32,19 @@
     <main class="flex flex-col gap-4">
         {% block content %}{% endblock %}
     </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Send timezone in an HTMX request (if using HTMX)
+            document.body.addEventListener("htmx:configRequest", function (event) {
+                event.detail.headers['X-Timezone'] = timezone;
+            });
+
+            // Or store it as a cookie (if relying on normal form submissions)
+            document.cookie = "timezone=" + timezone + "; path=/";
+        });
+    </script>
 </body>
 </html>

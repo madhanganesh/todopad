@@ -8,6 +8,7 @@ use axum::{
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use jsonwebtoken::{encode, EncodingKey, Header};
+use tower_sessions::Session;
 
 use crate::{repo::{self, todo::get_user_from_email}, utils::{self, verify_password}};
 use super::{BaseTemplate, Claims};
@@ -32,9 +33,13 @@ pub struct LoginForm {
     password: String,
 }
 
-pub async fn login_handler(headers: HeaderMap, 
-                            pool: State<Arc<SqlitePool>>, 
-                            Form(form): Form<LoginForm>) -> Response {
+pub async fn login_handler(
+    session: Session,
+    headers: HeaderMap, 
+    pool: State<Arc<SqlitePool>>, 
+    Form(form): Form<LoginForm>) 
+-> Response {
+
     let user = get_user_from_email(&pool, &form.email).await;
     if let Ok(user) = user {
         if verify_password(&user.password_hash, &form.password) {
@@ -42,6 +47,7 @@ pub async fn login_handler(headers: HeaderMap,
         }
     }
 
+    session.insert("filter", "pending".to_string()).await.unwrap();
     let template = LoginTemplate {
         base: BaseTemplate::new(headers).await,
         error: Some("Invalid username or password".to_string()),

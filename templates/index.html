@@ -32,10 +32,8 @@
         document.getElementById("todo-count").innerText = text
     }
 
-    // Run on initial page load
     document.addEventListener("DOMContentLoaded", updateTodoCount);
 
-    // Run every time HTMX updates the page (after swap)
     document.body.addEventListener("htmx:afterSwap", function(event) {
         updateTodoCount();
     });
@@ -43,15 +41,6 @@
     document.body.addEventListener("htmx:afterRequest", function () {
             updateTodoCount();
     });
-    /*document.addEventListener("DOMContentLoaded", function () {
-        console.log("here........");
-
-        document.body.addEventListener("htmx:afterRequest", function () {
-            updateTodoCount();
-        });
-
-        updateTodoCount();
-    });*/
 
     function formatTags(todoId) {
         let tooltip = document.getElementById(`tooltip-content-${todoId}`);

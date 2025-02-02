@@ -1,4 +1,5 @@
-use chrono::{Local, NaiveDate};
+use chrono::{NaiveDate, Utc};
+use chrono_tz::Tz;
 use regex::Regex;
 use serde::Serialize;
 use sqlx::FromRow;
@@ -26,9 +27,11 @@ impl Todo {
         self.notes.as_deref().unwrap_or("")
     }
 
-    pub fn relative_due(&self) -> String {
+    pub fn relative_due(&self, timezone: &str) -> String {
         let due = self.due.unwrap();
-        let today = Local::now().date_naive();
+        let tz: Tz = timezone.parse().unwrap_or(chrono_tz::UTC);
+        let now_in_tz = Utc::now().with_timezone(&tz);
+        let today = now_in_tz.date_naive();
         let difference = (due - today).num_days();
 
         match difference {

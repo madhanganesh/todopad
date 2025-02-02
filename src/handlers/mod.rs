@@ -11,7 +11,8 @@ use axum::{
     http::{StatusCode, HeaderMap},
     response::{Html, IntoResponse, Response},
 };
-use chrono::{NaiveDate, Utc};
+use chrono::{NaiveDate, Utc, DateTime};
+use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
 use auth::validate_cookie;
 use sqlx::SqlitePool;
@@ -109,10 +110,14 @@ fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title:
 async fn get_todos_and_show_date(
         filter: &str,
         pool: &SqlitePool,
-        user_id: i64
+        user_id: i64,
+        timezone: &str,
 ) -> (Vec<Todo>, bool) {
 
-    let today = Utc::now().naive_utc().date();
+    let tz: Tz = timezone.parse().unwrap_or(chrono_tz::UTC);
+    let now_in_tz: DateTime<Tz> = Utc::now().with_timezone(&tz);
+
+    let today: NaiveDate = now_in_tz.date_naive();
     let tomorrow = today.succ_opt().unwrap();
     let yesterday = today.pred_opt().unwrap();
 
@@ -125,8 +130,11 @@ async fn get_todos_and_show_date(
     }
 }
 
-fn get_date_and_show_date(filter: &str) -> (NaiveDate, bool) {
-    let today = Utc::now().naive_utc().date();
+fn get_date_and_show_date(filter: &str, timezone: &str) -> (NaiveDate, bool) {
+    let tz: Tz = timezone.parse().unwrap_or(chrono_tz::UTC);
+    let now_in_tz: DateTime<Tz> = Utc::now().with_timezone(&tz);
+
+    let today: NaiveDate = now_in_tz.date_naive();
     let tomorrow = today.succ_opt().unwrap();
     let yesterday = today.pred_opt().unwrap();
 
@@ -137,4 +145,70 @@ fn get_date_and_show_date(filter: &str) -> (NaiveDate, bool) {
         "yesterday" => (yesterday, false),
         _ => (today, true),
     }
+}
+
+/*use axum::{
+    extract::Request,
+    middleware::Next,
+};
+use chrono_tz::Tz;
+use std::sync::Arc;
+
+/// Key for storing timezone in Axum's request extensions
+#[derive(Clone)]
+pub struct Timezone(String);
+
+/// Middleware function to extract timezone and store it in request extensions
+pub async fn timezone_middleware(
+    cookies: Cookies,
+    headers: HeaderMap,
+    request: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    // Get timezone from headers or cookies, fallback to UTC
+    let user_timezone = headers.get("X-Timezone")
+        .and_then(|tz| tz.to_str().ok())
+        .or_else(|| cookies.get("timezone").map(|c| c.value()))
+        .unwrap_or("UTC")
+        .to_string();
+
+    // Attach timezone to request extensions
+    let mut request = request;
+    request.extensions_mut().insert(Timezone(user_timezone));
+
+    // Continue to the next middleware/handler
+    Ok(next.run(request).await)
+}*/
+
+use axum::{
+    extract::Request,
+    middleware::Next,
+};
+
+
+pub async fn timezone_middleware(
+    mut request: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    // Check headers first (HTMX requests)
+    let tz = request.headers()
+        .get("X-Timezone")
+        .and_then(|h| h.to_str().ok())
+        .or_else(|| {
+            // Check cookies
+            request.headers()
+                .get_all("Cookie")
+                .iter()
+                .find_map(|c| {
+                    let cookie = c.to_str().ok()?;
+                    cookie.split(';')
+                        .find(|s| s.trim().starts_with("timezone="))
+                        .and_then(|s| s.split('=').nth(1))
+                })
+        })
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "UTC".to_string()); // Final fallback
+
+    request.extensions_mut().insert(tz);
+    Ok(next.run(request).await)
 }

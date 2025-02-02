@@ -35,8 +35,8 @@ TODO:
 
 bugs
 ====
-[ ] Bar Chart and Pie Graps are coming wrong
-[ ] On completipn should not remove other than Pending
+[Done] Bar Chart and Pie Graps are coming wrong
+[Done] On completipn should not remove other than Pending
 
 1. when editing the title the tags are not regenerated. but when implementing this, need to careful
 that if user has given any tags explicitly - then no need to regenarate the tags again

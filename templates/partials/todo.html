@@ -83,7 +83,7 @@
         {% if show_date %}
         <span class="inline-flex whitespace-nowrap text-xs font-thin px-2 py-1 bg-white text-gray-500
                     border border-gray-500 rounded-full w-auto">
-            {{todo.relative_due()}}
+            {{todo.relative_due(timezone.as_str())}}
         </span>
         {% endif %}
     </div>

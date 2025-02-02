@@ -7,7 +7,8 @@ use axum::{
     http::{HeaderMap, HeaderValue}, 
     response::{Html, IntoResponse, Response}, 
 };
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Utc, DateTime};
+use chrono_tz::Tz;
 use hyper::StatusCode;
 use serde::{Serialize, Deserialize};
 use sqlx::SqlitePool;
@@ -26,20 +27,28 @@ pub struct TodoInputForm {
 pub struct TodoTemplate<'a> {
     pub todo: &'a Todo,
     pub show_date: bool,
+    pub timezone: String,
 }
 
 pub async fn create_todo(
     session: Session,
     Extension(user): Extension<CurrentUser>,
+    Extension(timezone): Extension<String>,
     State(pool): State<Arc<SqlitePool>>, 
-    Form(form): Form<TodoInputForm>) -> Response {
+    Form(form): Form<TodoInputForm>,
+) -> Response {
 
-    let filter: String = session.get("filter").await.unwrap().unwrap_or("pending".to_string());
-    let (due, show_date) = super::get_date_and_show_date(&filter); 
+    let filter: String = session
+        .get("filter")
+        .await
+        .unwrap()
+        .unwrap_or("pending".to_string());
+
+    let (due, show_date) = super::get_date_and_show_date(&filter, &timezone); 
 
     match repo::todo::create_todo(&pool, user.user_id, &form.title, &due).await {
         Ok(todo) => {
-            let template = TodoTemplate { todo: &todo, show_date };
+            let template = TodoTemplate { todo: &todo, show_date, timezone: timezone.clone() };
             spawn_get_tags_and_save(&pool, user.user_id, todo.id, todo.title.clone());
             super::HtmlTemplate(template).into_response()
         }
@@ -54,6 +63,7 @@ pub async fn create_todo(
 pub struct TodosTemplate {
     pub todos: Vec<Todo>,
     pub show_date: bool,
+    pub timezone: String,
 }
 
 pub async fn get_todos(
@@ -61,15 +71,21 @@ pub async fn get_todos(
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>, 
     Query(query_params): Query<HashMap<String, String>>,
+    Extension(timezone): Extension<String>,
 ) -> impl IntoResponse {
 
     let filter: &str = query_params.get("filter")
         .map(String::as_str)
         .unwrap_or("pending");
 
-    let (todos, show_date) = get_todos_and_show_date(filter, &pool, user.user_id).await;
+    let (todos, show_date) = get_todos_and_show_date(
+        filter, &pool, user.user_id, &timezone).await;
     session.insert("filter", filter).await.unwrap();
-    let template = TodosTemplate { todos, show_date };
+    let template = TodosTemplate { 
+        todos, 
+        show_date, 
+        timezone,
+    };
     super::HtmlTemplate(template).into_response()
 }
 
@@ -91,10 +107,6 @@ pub async fn toggle_todo(
     Path(id): Path<i64>,
 ) -> Json<serde_json::Value> {
     let filter: String = session.get("filter").await.unwrap().unwrap_or("pending".to_string());
-    /*match repo::todo::toggle_todo(&pool, user.user_id, id).await {
-        Ok(_) => StatusCode::ACCEPTED,
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
-    }*/
     match repo::todo::toggle_todo(&pool, user.user_id, id).await {
         Ok(_) => Json(json!({ "status": "ok", "filter": filter })),
         Err(_) => Json(json!({ "status": "error" })),
@@ -189,6 +201,7 @@ pub async fn update_todo(
     Path(todo_id): Path<i64>,
     State(pool): State<Arc<SqlitePool>>,
     Extension(user): Extension<CurrentUser>,
+    Extension(timezone): Extension<String>,
     Form(form): Form<TodoEditForm>,
 ) -> Response {
 
@@ -196,7 +209,11 @@ pub async fn update_todo(
         Some(ref date_str) if !date_str.is_empty() => {
             NaiveDate::parse_from_str(date_str, "%Y-%m-%d").ok()
         }
-        _ => None,
+        _ => {
+            let tz: Tz = timezone.parse().unwrap_or(chrono_tz::UTC);
+            let now_in_tz: DateTime<Tz> = Utc::now().with_timezone(&tz);
+            Some(now_in_tz.date_naive())
+        }
     };
 
     let todo = Todo {

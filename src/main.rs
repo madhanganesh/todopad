@@ -21,6 +21,7 @@ use handlers::login::{login_page, login_handler, logout_handler, register_page, 
 use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit, get_tags};
 use handlers::insights::{insights_page, get_insight_data, new_insight, edit_insight, save_insight, delete_insight_h};
 use handlers::auth::auth_middleware;
+use handlers::timezone_middleware;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -84,6 +85,7 @@ async fn main() {
     let routes = public_routes
         .merge(auth_routes)
         .layer(session_layer)
+        .route_layer(middleware::from_fn(timezone_middleware))
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
