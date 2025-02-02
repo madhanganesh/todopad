@@ -55,7 +55,8 @@ pub async fn login_handler(
     super::HtmlTemplate(template).into_response()
 }
 
-pub async fn logout_handler() -> impl IntoResponse {
+pub async fn logout_handler(session: Session) -> impl IntoResponse {
+     session.delete().await.unwrap();
      Response::builder()
         .status(StatusCode::FOUND)
         .header(

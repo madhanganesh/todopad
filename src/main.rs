@@ -13,7 +13,10 @@ use axum::{
 use dotenv::dotenv;
 use tower_http::services::ServeDir;
 use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer};
+use tower_cookies::CookieManagerLayer;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
+use chrono::{Utc, Duration};
+use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 
 use handlers::index::index;
 use handlers::about::about;
@@ -39,10 +42,12 @@ async fn main() {
     println!("DATABASE_URL: {}", database_url);
     println!("SQLX_OFFLINE is set to: {}", env::var("SQLX_OFFLINE").unwrap());
 
+    let expiry_time = Utc::now() + Duration::days(24);
+    let expiry_time = OffsetDateTime::parse(&expiry_time.to_rfc3339(), &Rfc3339).unwrap();
     let store = MemoryStore::default();
     let session_layer = SessionManagerLayer::new(store)
         .with_secure(false)
-        .with_expiry(Expiry::OnSessionEnd);
+        .with_expiry(Expiry::AtDateTime(expiry_time));
 
     let pool = match get_db(&database_url).await {
         Ok(pool) => pool,
@@ -85,6 +90,7 @@ async fn main() {
     let routes = public_routes
         .merge(auth_routes)
         .layer(session_layer)
+        .layer(CookieManagerLayer::new())
         .route_layer(middleware::from_fn(timezone_middleware))
         .with_state(pool);
 

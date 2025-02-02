@@ -49,7 +49,7 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 
 4. Click on link icon is confusing esp i there is only one link
 
-5. Run google page insights - and fix the perf issues
+5. [Done] Run google page insights - and fix the perf issues
 
 6. [Done] Timezone issues... if I create in US, singapore date is used
 
@@ -66,5 +66,9 @@ that if user has given any tags explicitly - then no need to regenarate the tags
     b. Show description of insight
 
 12. Refactor edit HTML
+
+13. move JS to files and minify
+
+14. Further speed improvement (googl epage insights)
 
 
