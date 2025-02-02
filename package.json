@@ -1,0 +1,23 @@
+{
+  "name": "todopad",
+  "version": "1.0.0",
+  "description": "sqlx database create sqlx migrate run",
+  "main": "index.js",
+  "scripts": {
+  "build:js": "npx esbuild node_modules/alpinejs/dist/module.esm.js node_modules/htmx.org/dist/htmx.min.js --bundle --minify --outdir=static/js",
+  "build:fa": "mkdir -p static/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/css static/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/webfonts static/fontawesome",
+  "build": "npm run build:js && npm run build:fa"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "alpinejs": "^3.14.8",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.2",
+    "htmx.org": "^1.9.12",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.0.3"
+  }
+}

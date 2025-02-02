@@ -51,7 +51,7 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 
 5. Run google page insights - and fix the perf issues
 
-6. Timezone issues... if I create in US, singapore date is used
+6. [Done] Timezone issues... if I create in US, singapore date is used
 
 7. Secret key is hard coded - handlers/mod.rs
 
