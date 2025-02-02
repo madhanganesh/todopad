@@ -4,7 +4,7 @@ use askama::Template;
 use axum::{
     Extension, Form, Json,
     extract::{Path, Query, State}, 
-    http::{HeaderMap, HeaderValue}, 
+    http::HeaderMap, 
     response::{Html, IntoResponse, Response}, 
 };
 use chrono::{NaiveDate, Utc, DateTime};
@@ -231,11 +231,15 @@ pub async fn update_todo(
     match result {
         Ok(_) => {
             update_tags(&pool, user.user_id, todo_id, String::from(&form.title), &form.tags).await;
-            Response::builder()
+            /*Response::builder()
                 .status(StatusCode::OK)
                 .header("HX-Location", HeaderValue::from_static("/"))
                 .body(axum::body::Body::empty())
-                .unwrap()
+                .unwrap()*/
+
+            let path = "<script>window.location.href='/';</script>";
+            Html(path).into_response()
+
         }, 
         Err(err) => {
             eprintln!("Error getting a todo: {:?}", err);
@@ -259,11 +263,13 @@ pub async fn delete_todo_from_edit(
     let result = repo::todo::delete_todo(&pool, user.user_id, todo_id).await;
     match result {
         Ok(_) => {
-            Response::builder()
+            /*Response::builder()
                 .status(StatusCode::OK)
                 .header("HX-Location", HeaderValue::from_static("/"))
                 .body(axum::body::Body::empty())
-                .unwrap()
+                .unwrap()*/
+            let path = "<script>window.location.href='/';</script>";
+            Html(path).into_response()
         }, 
         Err(err) => {
             eprintln!("Error getting a todo: {:?}", err);
@@ -310,3 +316,34 @@ pub async fn get_tags(
 
     Json(TagResponse { tags} )
 }
+
+#[derive(Serialize)]
+struct TodoTrends {
+    hours: f64,
+}
+
+pub async fn get_todos_trends(
+    session: Session,
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>, 
+    Extension(timezone): Extension<String>,
+) -> impl IntoResponse {
+
+    let filter: String = session
+        .get("filter")
+        .await
+        .unwrap()
+        .unwrap_or("pending".to_string());
+
+
+    let (todos, _) = get_todos_and_show_date(
+        &filter, 
+        &pool, 
+        user.user_id, 
+        &timezone).await;
+
+    Json(TodoTrends {
+        hours: todos.iter().map(|t| t.effort).sum(),
+    })
+}
+

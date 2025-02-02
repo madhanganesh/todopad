@@ -18,7 +18,7 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
 use chrono::{Utc, Duration};
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 
-use handlers::index::index;
+use handlers::{index::index, todo::get_todos_trends};
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler, register_page, register_handler};
 use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit, get_tags};
@@ -77,6 +77,7 @@ async fn main() {
         .route("/todos/_edit/{id}", delete(delete_todo_from_edit))
         .route("/todos/{id}/toggle", post(toggle_todo))
         .route("/todos/{id}/tags", get(get_tags_for_todo))
+        .route("/todos/trends", get(get_todos_trends))
         .route("/tags", get(get_tags))
         .route("/insights", get(insights_page))
         .route("/insights/{id}", get(insights_page))

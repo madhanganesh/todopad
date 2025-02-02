@@ -7,8 +7,13 @@
     </div>
 
     <div class="flex items-center justify-between">
-        {% include "partials/todo-filter.html" %} 
-        <span id="todo-count"></span>
+        <span>
+            {% include "partials/todo-filter.html" %} 
+        </span>
+        <span class="flex gap-4">
+            <span id="todo-count"></span>
+            <span id="todo-hours"></span>
+        </span>
     </div>
 
     <div>
@@ -29,17 +34,30 @@
         if (count > 1) {
             text = `${count} todos`;
         }
-        document.getElementById("todo-count").innerText = text
+        document.getElementById("todo-count").innerText = text;
+
+        document.getElementById("todo-hours").innerText = '';
+        fetch('/todos/trends')
+            .then(res => res.json())
+            .then(trends => {
+                let text = '';
+                if (trends.hours === 1) {
+                    text = `${trends.hours} hour`;
+                }
+                if (trends.hours > 1) {
+                    text = `${trends.hours} hours`;
+                }
+                document.getElementById("todo-hours").innerText = text;
+            })
+            .catch(err => {
+                console.err('error in getting trends', err);  
+            });
     }
 
     document.addEventListener("DOMContentLoaded", updateTodoCount);
 
-    document.body.addEventListener("htmx:afterSwap", function(event) {
-        updateTodoCount();
-    });
-
     document.body.addEventListener("htmx:afterRequest", function () {
-            updateTodoCount();
+        updateTodoCount();
     });
 
     function formatTags(todoId) {
