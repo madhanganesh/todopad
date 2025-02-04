@@ -56,7 +56,7 @@ pub async fn login_handler(
 }
 
 pub async fn logout_handler(session: Session) -> impl IntoResponse {
-     session.delete().await.unwrap();
+     session.clear().await;
      Response::builder()
         .status(StatusCode::FOUND)
         .header(

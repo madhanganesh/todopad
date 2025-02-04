@@ -7,9 +7,9 @@
             hx-post="/todos/{{ todo.id }}/toggle"
             hx-trigger="change"
             hx-on::after-request="
-            if (event.detail.successful && event.detail.xhr.responseText) { 
-                let response = JSON.parse(event.detail.xhr.responseText); 
-                if (response.filter === 'pending') { 
+            if (event.detail.successful) {
+                let filter = document.getElementById('filter').value;
+                if (filter === 'pending') { 
                     document.getElementById('todo-{{ todo.id }}').remove();
                 } 
             }"

@@ -101,15 +101,13 @@ pub async fn delete_todo(
 }
 
 pub async fn toggle_todo(
-    session: Session,
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>,
     Path(id): Path<i64>,
-) -> Json<serde_json::Value> {
-    let filter: String = session.get("filter").await.unwrap().unwrap_or("pending".to_string());
+) -> StatusCode {
     match repo::todo::toggle_todo(&pool, user.user_id, id).await {
-        Ok(_) => Json(json!({ "status": "ok", "filter": filter })),
-        Err(_) => Json(json!({ "status": "error" })),
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
 
