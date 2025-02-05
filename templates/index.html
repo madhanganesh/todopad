@@ -21,90 +21,9 @@
             {% include "partials/todos.html" %}
         {%endif%}
     </div>
-
 </div>
 
-<script>
-    function updateTodoCount() {
-        const count = document.querySelectorAll("#todo-list li").length;
-        let text = 'No todos';
-        if (count === 1) {
-            text = `${count} todo`;
-        } 
-        if (count > 1) {
-            text = `${count} todos`;
-        }
-        document.getElementById("todo-count").innerText = text;
+<script src="/static/js/index.js" defer></script>
 
-        document.getElementById("todo-hours").innerText = '';
-        fetch('/todos/trends')
-            .then(res => res.json())
-            .then(trends => {
-                let text = '';
-                if (trends.hours === 1) {
-                    text = `${trends.hours} hour`;
-                }
-                if (trends.hours > 1) {
-                    text = `${trends.hours} hours`;
-                }
-                document.getElementById("todo-hours").innerText = text;
-            })
-            .catch(err => {
-                console.err('error in getting trends', err);  
-            });
-    }
-
-    document.addEventListener("DOMContentLoaded", updateTodoCount);
-
-    document.body.addEventListener("htmx:afterRequest", function () {
-        updateTodoCount();
-    });
-
-    function formatTags(todoId) {
-        let tooltip = document.getElementById(`tooltip-content-${todoId}`);
-
-        try {
-            let tags = JSON.parse(tooltip.innerText); // Convert JSON string to array
-
-            if (tags.length === 0) {
-                tooltip.innerHTML = "<div class='py-1 text-gray-300 italic'>No tags available</div>";
-            } else {
-                tooltip.innerHTML = tags.map(tag => `<div>${tag}</div>`).join("");
-            }
-        } catch (e) {
-            console.error("Failed to parse tags:", e);
-        }
-    }
-
-    function parseTags(tooltipId, event) {
-        let contentElement = document.getElementById(tooltipId);
-        try {
-            let tagsArray = JSON.parse(contentElement.innerText); 
-            contentElement.innerHTML =  tagsArray.map(tag => `<div>${tag}</div>`).join(``);
-            if (event) {
-                showTooltip(event, tooltipId);
-            }
-        } catch (error) {
-            contentElement.innerHTML = "<div>Error loading tags</div>"; 
-            console.error("Invalid JSON from /tags:", error);
-        }
-    }
-
-    function showTooltip(event, tooltipId) {
-        const content = document.querySelector("#" + tooltipId).innerHTML;
-        tippy(event.target, {
-            content: content,
-            allowHTML: true,
-            interactive: true,
-            placement: "bottom",
-            theme: "light-border",
-            duration: 500,  
-        }).show();
-    }
-
-    function hideTooltip(event) {
-        event.target._tippy?.hide();
-    }
-</script>
 {% endblock %}
 

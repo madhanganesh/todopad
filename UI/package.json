@@ -12,8 +12,8 @@
     "build:css": "npx tailwindcss -i ./tailwind.css -o $npm_package_config_assets/css/tailwind.css --minify",
     "watch:css": "npx tailwindcss -i ./tailwind.css -o $npm_package_config_assets/css/tailwind.css --minify --watch",
 
-    "build:js": "npx esbuild ./js/main.js --bundle --minify --format=iife --outfile=$npm_package_config_assets/js/main.js",
-    "watch:js": "npx esbuild ./js/main.js --bundle --format=iife --outfile=$npm_package_config_assets/js/main.js --watch",
+    "build:js": "npx esbuild ./js/*.js --bundle --minify --outdir=$npm_package_config_assets/js",
+    "watch:js": "npx esbuild ./js/*.js --bundle --minify --outdir=$npm_package_config_assets/js --watch",
 
     "build:fa": "mkdir -p $npm_package_config_assets/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/css $npm_package_config_assets/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/webfonts $npm_package_config_assets/fontawesome",
     "build:fonts": "mkdir -p $npm_package_config_assets/fonts && cp -r fonts $npm_package_config_assets/",

@@ -8,7 +8,7 @@ cursor = conn.cursor()
 
 # Define the start and end date
 start_date = datetime(2024, 1, 1)
-end_date = datetime(2025, 1, 31)  # Change as needed
+end_date = datetime(2025, 2, 7)  # Change as needed
 
 # Function to generate a random effort value from 0.5 to 3.5 in steps of 0.5
 def random_effort():
