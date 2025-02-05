@@ -1,5 +1,4 @@
 use std::{collections::HashMap, sync::Arc};
-use serde_json::json;
 use askama::Template;
 use axum::{
     Extension, Form, Json,

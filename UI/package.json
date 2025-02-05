@@ -1,0 +1,38 @@
+{
+  "name": "todopad",
+  "version": "1.0.0",
+  "description": "sqlx database create sqlx migrate run",
+  "main": "index.js",
+  "config": {
+    "assets": "../static"
+  },
+  "scripts": {
+    "clean": "rm -rf  $npm_package_config_assets && mkdir -p  $npm_package_config_assets/js  $npm_package_config_assets/css  $npm_package_config_assets/fonts  $npm_package_config_assets/fontawesome",
+
+    "build:css": "npx tailwindcss -i ./tailwind.css -o $npm_package_config_assets/css/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i ./tailwind.css -o $npm_package_config_assets/css/tailwind.css --minify --watch",
+
+    "build:js": "npx esbuild ./js/main.js --bundle --minify --format=iife --outfile=$npm_package_config_assets/js/main.js",
+    "watch:js": "npx esbuild ./js/main.js --bundle --format=iife --outfile=$npm_package_config_assets/js/main.js --watch",
+
+    "build:fa": "mkdir -p $npm_package_config_assets/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/css $npm_package_config_assets/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/webfonts $npm_package_config_assets/fontawesome",
+    "build:fonts": "mkdir -p $npm_package_config_assets/fonts && cp -r fonts $npm_package_config_assets/",
+
+    "build": "npm run clean && cp favicon.ico $npm_package_config_assets/ && npm run build:css && npm run build:js && npm run build:fonts && npm run build:fa",
+
+    "watch": "npm run watch:css && npm run watch:js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@tailwindcss/cli": "^4.0.3",
+    "alpinejs": "^3.14.8",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.2",
+    "htmx.org": "^1.9.12",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.0.3"
+  }
+}

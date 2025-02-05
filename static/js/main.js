@@ -3281,7 +3281,7 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var src_default = alpine_default;
   var module_default = src_default;
 
-  // static/main.js
+  // js/main.js
   window.Alpine = module_default;
   module_default.start();
 })();

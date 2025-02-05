@@ -1,3 +1,5 @@
+cargo install sqlx-cli
+export DATABASE_URL=sqlite://todo.db
 sqlx database create
 sqlx migrate run
 
@@ -52,6 +54,8 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 5. [Done] Run google page insights - and fix the perf issues
 
 6. [Done] Timezone issues... if I create in US, singapore date is used
+
+7. [Open] add UI build also to Docker
 
 7. Secret key is hard coded - handlers/mod.rs
 
