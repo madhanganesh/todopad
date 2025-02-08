@@ -19,7 +19,7 @@ use time::{OffsetDateTime, Duration};
 use handlers::{index::index, todo::get_todos_trends};
 use handlers::about::about;
 use handlers::login::{login_page, login_handler, logout_handler, register_page, register_handler};
-use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit, get_tags};
+use handlers::todo::{create_todo, delete_todo, toggle_todo, get_todos, get_tags_for_todo, edit_todo, update_todo, delete_todo_from_edit, get_tags, update_effort, update_due, delete_tag};
 use handlers::insights::{insights_page, get_insight_data, new_insight, edit_insight, save_insight, delete_insight_h};
 use handlers::auth::auth_middleware;
 use handlers::timezone_middleware;
@@ -73,7 +73,10 @@ async fn main() {
         .route("/todos/{id}", delete(delete_todo))
         .route("/todos/_edit/{id}", delete(delete_todo_from_edit))
         .route("/todos/{id}/toggle", post(toggle_todo))
+        .route("/todos/{id}/update-effort", post(update_effort))
+        .route("/todos/{id}/update-due", post(update_due))
         .route("/todos/{id}/tags", get(get_tags_for_todo))
+        .route("/todos/{id}/tags/{tag}", delete(delete_tag))
         .route("/todos/trends", get(get_todos_trends))
         .route("/tags", get(get_tags))
         .route("/insights", get(insights_page))

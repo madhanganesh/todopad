@@ -6,14 +6,15 @@ use axum::{
     http::HeaderMap, 
     response::{Html, IntoResponse, Response}, 
 };
-use chrono::{NaiveDate, Utc, DateTime};
+use chrono::{DateTime, Days, Datelike, NaiveDate, Utc, Weekday};
 use chrono_tz::Tz;
 use hyper::StatusCode;
 use serde::{Serialize, Deserialize};
 use sqlx::SqlitePool;
 use tower_sessions::Session;
 
-use crate::{models::Todo, repo::{self}};
+use crate::{models::Todo, repo::todo::delete_todo_tag};
+use crate::repo;
 use super::{get_todos_and_show_date, spawn_get_tags_and_save, BaseTemplate, CurrentUser, HtmlTemplate};
 
 #[derive(Deserialize)]
@@ -95,7 +96,10 @@ pub async fn delete_todo(
 ) -> StatusCode {
     match repo::todo::delete_todo(&pool, user.user_id, id).await {
         Ok(_) => StatusCode::OK,
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        Err(err) => {
+            eprintln!("Error: in delete todo {}. {:?}", id, err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
     }
 }
 
@@ -344,3 +348,100 @@ pub async fn get_todos_trends(
     })
 }
 
+#[derive(Deserialize)]
+pub struct UpdateEffortRequest {
+    pub change: f64,  
+}
+
+pub async fn update_effort(
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>, 
+    Path(todo_id): Path<i64>,
+    Form(form): Form<UpdateEffortRequest>,
+) -> impl IntoResponse {
+    
+    let mut todo = repo::todo::get_todo(&pool, user.user_id, todo_id).await.unwrap();
+    let new_effort = (todo.effort + form.change).max(0.5); 
+    todo.effort = new_effort;
+    repo::todo::update_todo(&pool, &todo).await.unwrap();
+
+    let response_html = format!(
+        r#"<span id="effort-{}">{:.1}</span>"#,
+        todo_id, new_effort
+    );
+
+    Html(response_html)
+}
+
+#[derive(Deserialize)]
+pub struct UpdateDueRequest {
+    pub change: i64,  
+}
+
+pub async fn update_due(
+    Extension(user): Extension<CurrentUser>,
+    Extension(timezone): Extension<String>,
+    State(pool): State<Arc<SqlitePool>>, 
+    Path(todo_id): Path<i64>,
+    Form(form): Form<UpdateDueRequest>,
+) -> impl IntoResponse {
+    
+    let mut todo = repo::todo::get_todo(&pool, user.user_id, todo_id).await.unwrap();
+    let new_due = if form.change >= 0 {
+        next_weekday(todo.due.unwrap())
+    } else {
+        previous_weekday(todo.due.unwrap())
+    };
+    todo.due = Some(new_due);
+    repo::todo::update_todo(&pool, &todo).await.unwrap();
+
+    let response_html = format!(
+        r#"<span id="due-{}">{}</span>"#,
+        todo_id, todo.relative_due(&timezone)
+    );
+
+    Html(response_html)
+}
+
+fn next_weekday(mut date: NaiveDate) -> NaiveDate {
+    date = date.checked_add_days(Days::new(1)).unwrap(); // Move to next day
+
+    // If it's Saturday (Sat -> 6), move to Monday
+    // If it's Sunday (Sun -> 7), move to Monday
+    match date.weekday() {
+        Weekday::Sat => date = date.checked_add_days(Days::new(2)).unwrap(),
+        Weekday::Sun => date = date.checked_add_days(Days::new(1)).unwrap(),
+        _ => (),
+    }
+
+    date
+}
+
+fn previous_weekday(mut date: NaiveDate) -> NaiveDate {
+    date = date.checked_sub_days(Days::new(1)).unwrap(); // Move to previous day
+
+    // If it's Sunday, move to Friday (-2 days)
+    // If it's Saturday, move to Friday (-1 day)
+    match date.weekday() {
+        Weekday::Sun => date = date.checked_sub_days(Days::new(2)).unwrap(),
+        Weekday::Sat => date = date.checked_sub_days(Days::new(1)).unwrap(),
+        _ => (),
+    }
+
+    date
+}
+
+pub async fn delete_tag(
+    Extension(user): Extension<CurrentUser>,
+    State(pool): State<Arc<SqlitePool>>, 
+    Path((todo_id, tag)): Path<(i64, String)>,
+) -> StatusCode {
+
+    match delete_todo_tag(&pool, user.user_id, todo_id, &tag).await {
+        Ok(_) => StatusCode::OK,
+        Err(err) => {
+            eprintln!("Error: in delete tag {}. {:?}", &tag, err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}

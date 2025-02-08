@@ -1,0 +1,91 @@
+<div class="hidden md:group-hover:flex gap-1">
+    {% if todo.extract_links().len() != 0 %}
+    <span 
+        x-data="{ showTooltip: false }" 
+        @mouseenter="showTooltip = true" 
+        @mouseleave="showTooltip = false"
+        class="control"
+    >
+        <i class="fa-solid fa-link"></i>
+
+        <div x-show="showTooltip"
+            @click="showTooltip = false"
+            class="tooltip"
+        >
+            {% for link in todo.extract_links() %}
+                <a 
+                    href="{{ link }}" 
+                    target="_blank" 
+                    class="tooltip-item"
+                >
+                    {{ link }}
+                </a>
+            {% endfor %}
+        </div>
+    </span>
+    {% endif %}
+
+    <span 
+        x-data="{ showTooltip: false }" 
+        @mouseenter="showTooltip = true" 
+        @mouseleave="showTooltip = false"
+        hx-get="/todos/{{ todo.id }}/tags" 
+        hx-trigger="mouseenter once" 
+        hx-target="#tooltip-content-{{ todo.id }}"
+        hx-on::after-request="formatTags('{{ todo.id }}', event)"
+        class="control"
+    >
+        <i class="fas fa-tag"></i>
+
+        <div x-show="showTooltip"
+            class="tooltip"
+        >
+            <div id="tooltip-content-{{ todo.id }}">Loading...</div>
+        </div>
+    </span>
+
+    <span x-data="{ showTooltip: false }" 
+        @mouseenter="showTooltip = true" 
+        @mouseleave="showTooltip = false"
+        class1="control"
+        class="text-xs font-thin px-2 py-1 bg-white text-gray-500
+                border border-gray-500 rounded-full w-auto
+                cursor-pointer relative px-2 hover:bg-gray-500 hover:text-white"
+    >
+        <span id="due-{{todo.id}}">{{ todo.relative_due(timezone.as_str()) }}</span>
+
+        <div x-show="showTooltip" class="tooltip w-max"
+        >
+            <span  
+                hx-post="/todos/{{todo.id}}/update-due"
+                    hx-trigger="click"
+                    hx-target="#due-{{todo.id}}"
+                    hx-vals='{"change": 1}'
+                    hx-on::after-request="
+                        const due = document.getElementById('due-{{todo.id}}');
+                        const pendingDue = 
+                            document.getElementById('pending-due-{{todo.id}}');
+                        if (pendingDue) pendingDue.innerText = due.innerText;
+                    "
+                    class="tooltip-item">
+                Move to next day
+            </span>
+
+            <span  
+                hx-post="/todos/{{todo.id}}/update-due"
+                    hx-trigger="click"
+                    hx-target="#due-{{todo.id}}"
+                    hx-vals='{"change": -1}'
+                    hx-on::after-request="
+                        const due = document.getElementById('due-{{todo.id}}');
+                        const pendingDue = 
+                            document.getElementById('pending-due-{{todo.id}}');
+                        if (pendingDue) pendingDue.innerText = due.innerText;
+                    "
+                    class="tooltip-item">
+                Move to previous day
+            </span>
+        </div>
+    </span>
+</div> 
+

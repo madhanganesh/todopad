@@ -27,23 +27,9 @@ function updateTodoCount() {
         });
 }
 
-function formatTags(todoId) {
-    let tooltip = document.getElementById(`tooltip-content-${todoId}`);
-    try {
-        let tags = JSON.parse(tooltip.innerText);
-        if (tags.length === 0) {
-            tooltip.innerHTML = "<div class='py-1 text-gray-300 italic'>No tags available</div>";
-        } else {
-            tooltip.innerHTML = tags.map((tag) => `<div>${tag}</div>`).join("");
-        }
-    } catch (e) {
-        console.error("Failed to parse tags:", e);
-    }
-}
 
 // Expose functions to the global scope
 window.updateTodoCount = updateTodoCount;
-window.formatTags = formatTags;
 
 // Run on page load
 document.addEventListener("DOMContentLoaded", updateTodoCount);

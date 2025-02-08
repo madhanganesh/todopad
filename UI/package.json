@@ -20,7 +20,7 @@
 
     "build": "npm run clean && cp favicon.ico $npm_package_config_assets/ && npm run build:css && npm run build:js && npm run build:fonts && npm run build:fa",
 
-    "watch": "npm run watch:css && npm run watch:js"
+    "watch": "npm run watch:css & npm run watch:js"
   },
   "keywords": [],
   "author": "",

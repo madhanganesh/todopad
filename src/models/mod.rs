@@ -23,6 +23,10 @@ pub struct Todo {
 }
 
 impl Todo {
+    pub fn effort(&self) -> String {
+        format!("{:.1}", self.effort)
+    }
+
     pub fn notes_or_empty(&self) -> &str {
         self.notes.as_deref().unwrap_or("")
     }

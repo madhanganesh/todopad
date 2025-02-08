@@ -11,3 +11,24 @@
 @config "./tailwind.config.js";
 
 @import "tailwindcss";
+
+@layer components {
+    /* Top-Level Control (Span) */
+    .control {
+        @apply cursor-pointer relative px-2 
+               hover:bg-gray-500 hover:text-white rounded-md;
+    }
+
+    /* Tooltip Container */
+    .tooltip {
+        @apply text-sm text-white absolute bg-gray-500 
+                rounded-lg p-2 max-w-md z-10 shadow-lg;
+    }
+
+    /* Tooltip Item (Buttons, Links, Spans inside Tooltip) */
+    .tooltip-item {
+        @apply flex justify-between items-center bg-gray-300 
+               text-gray-800 px-2 py-1 rounded-md 
+               text-xs font-thin mt-1 mb-1 hover:bg-gray-400 transition;
+    }
+}

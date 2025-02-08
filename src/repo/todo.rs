@@ -173,6 +173,21 @@ pub async fn get_tags(pool: &SqlitePool, user_id: i64) -> Result<Vec<String>, sq
     Ok(tags)
 }
 
+pub async fn delete_todo_tag(
+    pool: &SqlitePool, 
+    user_id: i64, 
+    todo_id: i64, 
+    tag: &String) 
+-> Result<(), sqlx::Error> {
+
+    query_as!(Tag, "DELETE from tags where user_id=? and todo_id=? and tag=?", user_id, todo_id, tag)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+
+}
+
 
 fn map_sqlx_error(err: SqlxError) -> RegisterError {
     if let SqlxError::Database(db_err) = &err {
