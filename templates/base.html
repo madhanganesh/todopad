@@ -18,7 +18,7 @@
             <h1 class="text-2xl font-bold">todopad</h1>
         </div>
 
-        <nav>
+        <nav class="hidden md:flex space-x-4">
             <ul class="flex gap-4">
             {% for nav in base.navs %}
                 <li class="hover:border-b-2 border-b-gray-500 duration-200">
@@ -32,6 +32,16 @@
     <main class="flex flex-col gap-4">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Bottom Navigation (Visible on Mobile) -->
+    <nav class="fixed bottom-0 left-0 w-full bg-white shadow-md p-3 flex justify-around md:hidden">
+        {% for nav in base.navs %}
+        <a href="{{nav.url}}" class="flex flex-col items-center text-gray-700 hover:text-blue-600">
+            <i class="fas {{nav.icon}} text-lg"></i>
+            <span class="text-xs">{{nav.name}}</span>
+        </a>
+        {% endfor %}
+    </nav>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {

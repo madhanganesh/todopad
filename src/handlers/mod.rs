@@ -53,6 +53,7 @@ where
 struct NavItem {
     name: String,
     url: String,
+    icon: String,
 }
 
 struct BaseTemplate {
@@ -62,17 +63,45 @@ struct BaseTemplate {
 impl BaseTemplate {
     async fn new(headers: HeaderMap) -> Self {
         let mut navs =  vec![
-            NavItem{name: "todos".to_string(), url: "/".to_string()},
-            NavItem{name: "about".to_string(), url: "/about".to_string()},
-            NavItem{name: "login".to_string(), url: "/login".to_string()},
+            NavItem {
+                name: "Todos".to_string(), 
+                url: "/".to_string(), 
+                icon: "fa-list-check".to_string()
+            },
+            NavItem {
+                name: "About".to_string(), 
+                url: "/about".to_string(), 
+                icon: "fa-info-circle".to_string()
+            },
+            NavItem {
+                name: "Login".to_string(), 
+                url: "/login".to_string(), 
+                icon: "fa-sign-in-alt".to_string()
+            },
         ];
 
         if validate_cookie(&headers).await.is_ok() {
             navs =  vec![
-                NavItem{name: "todos".to_string(), url: "/".to_string()},
-                NavItem{name: "insights".to_string(), url: "/insights".to_string()},
-                NavItem{name: "about".to_string(), url: "/about".to_string()},
-                NavItem{name: "logout".to_string(), url: "/logout".to_string()},
+                NavItem {
+                    name: "Todos".to_string(), 
+                    url: "/".to_string(), 
+                    icon: "fa-list-check".to_string()
+                },
+                NavItem {
+                    name: "Insights".to_string(), 
+                    url: "/insights".to_string(), 
+                    icon: "fa-chart-line".to_string()
+                },
+                NavItem {
+                    name: "About".to_string(), 
+                    url: "/about".to_string(), 
+                    icon: "fa-info-circle".to_string()
+                },
+                NavItem {
+                    name: "Logout".to_string(), 
+                    url: "/logout".to_string(), 
+                    icon: "fa-sign-out-alt".to_string()
+                },
             ];
         }
 
