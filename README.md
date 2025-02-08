@@ -71,7 +71,7 @@ that if user has given any tags explicitly - then no need to regenarate the tags
 
 12. Refactor edit HTML
 
-13. move JS to files and minify
+13. [Done] move JS to files and minify
 
 14. Further speed improvement (googl epage insights)
 

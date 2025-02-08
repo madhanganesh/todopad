@@ -32,7 +32,11 @@
                         font-thin px-2 py-1 bg-white text-gray-500
                         border border-gray-500 rounded-full w-auto
                         group-hover:hidden">
-                <span id="pending-due-{{todo.id}}">{{ todo.relative_due(timezone.as_str()) }}</span>
+                <span id="pending-due-{{ todo.id }}" 
+                        class="{{ todo.relative_due_with_class(timezone.as_str()).1 }}"
+                >
+                    {{ todo.relative_due_with_class(timezone.as_str()).0 }}
+                </span>
             </span>
         {% endif %}
 

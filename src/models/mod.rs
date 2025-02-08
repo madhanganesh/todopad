@@ -31,19 +31,33 @@ impl Todo {
         self.notes.as_deref().unwrap_or("")
     }
 
-    pub fn relative_due(&self, timezone: &str) -> String {
+    pub fn relative_due(&self, timezone: &str) -> (String, i64) {
         let due = self.due.unwrap();
         let tz: Tz = timezone.parse().unwrap_or(chrono_tz::UTC);
         let now_in_tz = Utc::now().with_timezone(&tz);
         let today = now_in_tz.date_naive();
         let difference = (due - today).num_days();
 
-        match difference {
+        let date_str = match difference {
             0 => "today".to_string(),
             1 => "tomorrow".to_string(),
             -1 => "yesterday".to_string(),
             _ => due.format("%d %b").to_string(),
-        }
+        };
+
+        (date_str, difference)
+    }
+
+    pub fn relative_due_with_class(&self, timezone: &str) -> (String, String) {
+        let (date_str, difference) = self.relative_due(timezone);
+
+        let color_class = match difference {
+            0 => "text-yellow-500",       // Today
+            d if d < 0 => "text-red-500", // Overdue
+            _ => "text-green-500",        // Future
+        };
+
+        (date_str, color_class.to_string())
     }
 
     pub fn extract_links(&self) -> Vec<String> {

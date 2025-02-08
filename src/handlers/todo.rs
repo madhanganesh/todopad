@@ -395,11 +395,12 @@ pub async fn update_due(
     todo.due = Some(new_due);
     repo::todo::update_todo(&pool, &todo).await.unwrap();
 
-    let response_html = format!(
-        r#"<span id="due-{}">{}</span>"#,
-        todo_id, todo.relative_due(&timezone)
-    );
+    let (date_str, color_class) = todo.relative_due_with_class(&timezone);
 
+    let response_html = format!(
+        r#"<span id="due-{}" class="{}">{}</span>"#,
+        todo_id, color_class, date_str
+    );
     Html(response_html)
 }
 

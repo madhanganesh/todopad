@@ -22,7 +22,8 @@
     /* Tooltip Container */
     .tooltip {
         @apply text-sm text-white absolute bg-gray-500 
-                rounded-lg p-2 max-w-md z-10 shadow-lg;
+               p-2 max-w-md z-10 border border-white
+               left-1/2 top-full -translate-x-1/2;
     }
 
     /* Tooltip Item (Buttons, Links, Spans inside Tooltip) */

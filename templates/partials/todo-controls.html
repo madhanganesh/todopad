@@ -13,8 +13,7 @@
             class="tooltip"
         >
             {% for link in todo.extract_links() %}
-                <a 
-                    href="{{ link }}" 
+                <a href="{{ link }}" 
                     target="_blank" 
                     class="tooltip-item"
                 >
@@ -37,10 +36,38 @@
     >
         <i class="fas fa-tag"></i>
 
-        <div x-show="showTooltip"
-            class="tooltip"
-        >
+        <div x-show="showTooltip"class="tooltip">
             <div id="tooltip-content-{{ todo.id }}">Loading...</div>
+        </div>
+    </span>
+
+    <span x-data="{ showTooltip: false }" 
+        @mouseenter="showTooltip = true" 
+        @mouseleave="showTooltip = false"
+        class="text-xs font-thin px-2 py-1 bg-white text-gray-500
+                border border-gray-500 w-auto
+                cursor-pointer relative px-2 rounded-full
+                hover:bg-gray-500 hover:text-white"
+    >
+        <span id="effort-{{todo.id}}">{{ todo.effort() }}</span>
+        <span> hrs</span>
+
+        <div x-show="showTooltip" class="tooltip w-max">
+            <span hx-post="/todos/{{todo.id}}/update-effort"
+                    hx-trigger="click"
+                    hx-target="#effort-{{todo.id}}"
+                    hx-vals='{"change": 0.5}'
+                    class="tooltip-item">
+                Add effort
+            </span>
+
+            <span hx-post="/todos/{{todo.id}}/update-effort"
+                    hx-trigger="click"
+                    hx-target="#effort-{{todo.id}}"
+                    hx-vals='{"change": -0.5}'
+                    class="tooltip-item">
+                Reduce effort
+            </span>
         </div>
     </span>
 
@@ -52,21 +79,26 @@
                 border border-gray-500 rounded-full w-auto
                 cursor-pointer relative px-2 hover:bg-gray-500 hover:text-white"
     >
-        <span id="due-{{todo.id}}">{{ todo.relative_due(timezone.as_str()) }}</span>
+        <span id="due-{{ todo.id }}" class="{{ todo.relative_due_with_class(timezone.as_str()).1 }}">
+        {{ todo.relative_due_with_class(timezone.as_str()).0 }}
+    </span>
 
-        <div x-show="showTooltip" class="tooltip w-max"
-        >
+        <div x-show="showTooltip" class="tooltip w-max">
             <span  
                 hx-post="/todos/{{todo.id}}/update-due"
                     hx-trigger="click"
                     hx-target="#due-{{todo.id}}"
                     hx-vals='{"change": 1}'
+                    hx-swap="outerHTML"
                     hx-on::after-request="
-                        const due = document.getElementById('due-{{todo.id}}');
-                        const pendingDue = 
-                            document.getElementById('pending-due-{{todo.id}}');
-                        if (pendingDue) pendingDue.innerText = due.innerText;
-                    "
+                        setTimeout(() => {
+            const due = document.getElementById('due-{{todo.id}}');
+            const pendingDue = document.getElementById('pending-due-{{todo.id}}');
+            if (pendingDue && due) {
+                pendingDue.innerText = due.innerText;  // ✅ Copy text
+                pendingDue.className = due.className;  // ✅ Copy color class
+            }
+        }, 50);                     "
                     class="tooltip-item">
                 Move to next day
             </span>
@@ -75,13 +107,17 @@
                 hx-post="/todos/{{todo.id}}/update-due"
                     hx-trigger="click"
                     hx-target="#due-{{todo.id}}"
+                    hx-swap="outerHTML"
                     hx-vals='{"change": -1}'
                     hx-on::after-request="
-                        const due = document.getElementById('due-{{todo.id}}');
-                        const pendingDue = 
-                            document.getElementById('pending-due-{{todo.id}}');
-                        if (pendingDue) pendingDue.innerText = due.innerText;
-                    "
+                        setTimeout(() => {
+            const due = document.getElementById('due-{{todo.id}}');
+            const pendingDue = document.getElementById('pending-due-{{todo.id}}');
+            if (pendingDue && due) {
+                pendingDue.innerText = due.innerText;  // ✅ Copy text
+                pendingDue.className = due.className;  // ✅ Copy color class
+            }
+        }, 50);                     "
                     class="tooltip-item">
                 Move to previous day
             </span>
