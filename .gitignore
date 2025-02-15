@@ -8,6 +8,8 @@ todopad.db
 node_modules/
 web/public/build/
 api/api
+.idea
+UI/android/app/release/*
 
 
 # Added by cargo
