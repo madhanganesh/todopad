@@ -1,0 +1,9 @@
+dbs:
+  - path: "/data/todopad.db"  # SQLite database file path
+    replicas:
+      - type: "s3"
+        bucket: "dry-surf-9544"   
+        endpoint: "https://fly.storage.tigris.dev"  
+        path: "backups/todopad.db"  
+        access-key-id: "${AWS_ACCESS_KEY_ID}"
+        secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
