@@ -23,6 +23,8 @@ docker run --name todopad -e ENV=release -e DATABASE_URL=sqlite://todopad.db -e 
 
 fly ssh console -a todopad  
 
+test
+
 
 TODO:
 0. Edit Insight [Done]
