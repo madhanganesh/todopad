@@ -1,17 +1,20 @@
-use std::{fmt::Debug, sync::Arc};
 use askama::Template;
 use axum::{
     extract::{Form, State},
+    http::{HeaderMap, HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
-    http::{header, HeaderMap, HeaderValue, StatusCode}
 };
+use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Deserialize;
 use sqlx::SqlitePool;
-use jsonwebtoken::{encode, EncodingKey, Header};
+use std::{fmt::Debug, sync::Arc};
 use tower_sessions::Session;
 
-use crate::{repo::{self, todo::get_user_from_email}, utils::{self, verify_password}};
 use super::{BaseTemplate, Claims};
+use crate::{
+    repo::{self, todo::get_user_from_email},
+    utils::{self, verify_password},
+};
 
 const SECRET: &[u8] = b"my_secret_key";
 
@@ -23,7 +26,10 @@ struct LoginTemplate {
 }
 
 pub async fn login_page(headers: HeaderMap) -> impl IntoResponse {
-    let template = LoginTemplate { error: None, base: BaseTemplate::new(headers).await};
+    let template = LoginTemplate {
+        error: None,
+        base: BaseTemplate::new(headers).await,
+    };
     super::HtmlTemplate(template)
 }
 
@@ -35,11 +41,10 @@ pub struct LoginForm {
 
 pub async fn login_handler(
     session: Session,
-    headers: HeaderMap, 
-    pool: State<Arc<SqlitePool>>, 
-    Form(form): Form<LoginForm>) 
--> Response {
-
+    headers: HeaderMap,
+    pool: State<Arc<SqlitePool>>,
+    Form(form): Form<LoginForm>,
+) -> Response {
     let user = get_user_from_email(&pool, &form.email).await;
     if let Ok(user) = user {
         if verify_password(&user.password_hash, &form.password) {
@@ -47,7 +52,10 @@ pub async fn login_handler(
         }
     }
 
-    session.insert("filter", "pending".to_string()).await.unwrap();
+    session
+        .insert("filter", "pending".to_string())
+        .await
+        .unwrap();
     let template = LoginTemplate {
         base: BaseTemplate::new(headers).await,
         error: Some("Invalid username or password".to_string()),
@@ -56,8 +64,8 @@ pub async fn login_handler(
 }
 
 pub async fn logout_handler(session: Session) -> impl IntoResponse {
-     session.clear().await;
-     Response::builder()
+    session.clear().await;
+    Response::builder()
         .status(StatusCode::FOUND)
         .header(
             header::SET_COOKIE,
@@ -76,7 +84,10 @@ struct RegisterTemplate {
 }
 
 pub async fn register_page(headers: HeaderMap) -> impl IntoResponse {
-    let template = RegisterTemplate{error: None, base: BaseTemplate::new(headers).await};
+    let template = RegisterTemplate {
+        error: None,
+        base: BaseTemplate::new(headers).await,
+    };
     super::HtmlTemplate(template)
 }
 
@@ -93,15 +104,18 @@ pub async fn register_handler(
 ) -> Response {
     let password_hash = match utils::hash_password(&form.password) {
         Ok(hash) => hash,
-        Err(err) => { 
-            return handle_registration_error(headers, err, "System error. Please contact administrator").await;
+        Err(err) => {
+            return handle_registration_error(
+                headers,
+                err,
+                "System error. Please contact administrator",
+            )
+            .await;
         }
     };
 
     match repo::todo::register_user(&pool, &form.email, &password_hash).await {
-        Ok(user_id) => {
-            set_cookie_and_redirect(user_id)
-        }
+        Ok(user_id) => set_cookie_and_redirect(user_id),
         Err(err) => {
             let s = &err.to_string();
             handle_registration_error(headers, err, s).await
@@ -119,8 +133,12 @@ fn set_cookie_and_redirect(user_id: i64) -> Response {
         exp: expiration.timestamp() as usize,
     };
 
-    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(SECRET))
-        .expect("Failed to encode JWT");
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(SECRET),
+    )
+    .expect("Failed to encode JWT");
 
     let cookie = format!(
         "auth_token={}; HttpOnly; Path=/; Expires={}",
@@ -130,10 +148,7 @@ fn set_cookie_and_redirect(user_id: i64) -> Response {
 
     Response::builder()
         .status(StatusCode::FOUND)
-        .header(
-            header::SET_COOKIE,
-            HeaderValue::from_str(&cookie).unwrap(),
-        )
+        .header(header::SET_COOKIE, HeaderValue::from_str(&cookie).unwrap())
         .header(header::LOCATION, HeaderValue::from_static("/"))
         .body(axum::body::Body::empty())
         .unwrap()

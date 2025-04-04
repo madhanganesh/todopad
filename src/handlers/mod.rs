@@ -1,24 +1,28 @@
 pub mod about;
 pub mod auth;
 pub mod index;
+pub mod insights;
 pub mod login;
 pub mod todo;
-pub mod insights;
 
-use std::env;
 use askama::Template;
+use auth::validate_cookie;
 use axum::{
-    http::{StatusCode, HeaderMap},
+    http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse, Response},
 };
-use chrono::{NaiveDate, Utc, DateTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
-use auth::validate_cookie;
 use sqlx::SqlitePool;
+use std::env;
 
-use crate::{models::Todo, repo::todo::{get_pending_todos, get_todos_for_date}, utils::tags::get_tags};
 use crate::repo::todo::save_tags;
+use crate::{
+    models::Todo,
+    repo::todo::{get_pending_todos, get_todos_for_date},
+    utils::tags::get_tags,
+};
 
 const SECRET: &[u8] = b"my_secret_key";
 
@@ -45,7 +49,8 @@ where
             Err(err) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to render template. Error: {err}"),
-            ).into_response(),
+            )
+                .into_response(),
         }
     }
 }
@@ -62,45 +67,50 @@ struct BaseTemplate {
 
 impl BaseTemplate {
     async fn new(headers: HeaderMap) -> Self {
-        let mut navs =  vec![
+        let mut navs = vec![
             NavItem {
-                name: "Todos".to_string(), 
-                url: "/".to_string(), 
-                icon: "fa-list-check".to_string()
+                name: "Todos".to_string(),
+                url: "/".to_string(),
+                icon: "fa-list-check".to_string(),
             },
             NavItem {
-                name: "About".to_string(), 
-                url: "/about".to_string(), 
-                icon: "fa-info-circle".to_string()
+                name: "About".to_string(),
+                url: "/about".to_string(),
+                icon: "fa-info-circle".to_string(),
             },
             NavItem {
-                name: "Login".to_string(), 
-                url: "/login".to_string(), 
-                icon: "fa-sign-in-alt".to_string()
+                name: "Explore".to_string(),
+                url: "/static/pages/explore.html".to_string(),
+                icon: "fa-sign-in-alt".to_string(),
+            },
+            NavItem {
+                name: "Register".to_string(),
+                url: "/register".to_string(),
+                icon: "fa-sign-in-alt".to_string(),
             },
         ];
 
         if validate_cookie(&headers).await.is_ok() {
-            navs =  vec![
+            navs = vec![
                 NavItem {
-                    name: "Todos".to_string(), 
-                    url: "/".to_string(), 
-                    icon: "fa-list-check".to_string()
+                    name: "Todos".to_string(),
+                    url: "/".to_string(),
+                    icon: "fa-list-check".to_string(),
                 },
                 NavItem {
-                    name: "Insights".to_string(), 
-                    url: "/insights".to_string(), 
-                    icon: "fa-chart-line".to_string()
+                    name: "Insights".to_string(),
+                    url: "/insights".to_string(),
+                    icon: "fa-chart-line".to_string(),
                 },
                 NavItem {
-                    name: "About".to_string(), 
-                    url: "/about".to_string(), 
-                    icon: "fa-info-circle".to_string()
+                    name: "About".to_string(),
+                    url: "/about".to_string(),
+                    icon: "fa-info-circle".to_string(),
                 },
                 NavItem {
-                    name: "Logout".to_string(), 
-                    url: "/logout".to_string(), 
-                    icon: "fa-sign-out-alt".to_string()
+                    name: "Logout".to_string(),
+                    url: "/logout".to_string(),
+                    icon: "fa-sign-out-alt".to_string(),
                 },
             ];
         }
@@ -115,7 +125,6 @@ struct AboutTemplate {
     base: BaseTemplate,
 }
 
-
 fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title: String) {
     let openai_api_key = env::var("OPENAI_API_KEY");
     match openai_api_key {
@@ -129,7 +138,7 @@ fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title:
                     Err(err) => eprintln!("Error: {:?}", err),
                 }
             });
-        },
+        }
         Err(_) => {
             println!("OPENAI_API_KEY is not set so tags are not idetified");
         }
@@ -137,12 +146,11 @@ fn spawn_get_tags_and_save(pool: &SqlitePool, user_id: i64, todo_id: i64, title:
 }
 
 async fn get_todos_and_show_date(
-        filter: &str,
-        pool: &SqlitePool,
-        user_id: i64,
-        timezone: &str,
+    filter: &str,
+    pool: &SqlitePool,
+    user_id: i64,
+    timezone: &str,
 ) -> (Vec<Todo>, bool) {
-
     let tz: Tz = timezone.parse().unwrap_or(chrono_tz::UTC);
     let now_in_tz: DateTime<Tz> = Utc::now().with_timezone(&tz);
 
@@ -152,10 +160,19 @@ async fn get_todos_and_show_date(
 
     match filter {
         "pending" => (get_pending_todos(pool, user_id).await.unwrap(), true),
-        "today" => (get_todos_for_date(pool, user_id, &today).await.unwrap(), false),
-        "yesterday" => (get_todos_for_date(pool, user_id, &yesterday).await.unwrap(), false),
-        "tomorrow" => (get_todos_for_date(pool, user_id, &tomorrow).await.unwrap(), false),
-        _ =>  (get_pending_todos(pool, user_id).await.unwrap(), true),
+        "today" => (
+            get_todos_for_date(pool, user_id, &today).await.unwrap(),
+            false,
+        ),
+        "yesterday" => (
+            get_todos_for_date(pool, user_id, &yesterday).await.unwrap(),
+            false,
+        ),
+        "tomorrow" => (
+            get_todos_for_date(pool, user_id, &tomorrow).await.unwrap(),
+            false,
+        ),
+        _ => (get_pending_todos(pool, user_id).await.unwrap(), true),
     }
 }
 
@@ -209,31 +226,23 @@ pub async fn timezone_middleware(
     Ok(next.run(request).await)
 }*/
 
-use axum::{
-    extract::Request,
-    middleware::Next,
-};
+use axum::{extract::Request, middleware::Next};
 
-
-pub async fn timezone_middleware(
-    mut request: Request,
-    next: Next,
-) -> Result<Response, StatusCode> {
+pub async fn timezone_middleware(mut request: Request, next: Next) -> Result<Response, StatusCode> {
     // Check headers first (HTMX requests)
-    let tz = request.headers()
+    let tz = request
+        .headers()
         .get("X-Timezone")
         .and_then(|h| h.to_str().ok())
         .or_else(|| {
             // Check cookies
-            request.headers()
-                .get_all("Cookie")
-                .iter()
-                .find_map(|c| {
-                    let cookie = c.to_str().ok()?;
-                    cookie.split(';')
-                        .find(|s| s.trim().starts_with("timezone="))
-                        .and_then(|s| s.split('=').nth(1))
-                })
+            request.headers().get_all("Cookie").iter().find_map(|c| {
+                let cookie = c.to_str().ok()?;
+                cookie
+                    .split(';')
+                    .find(|s| s.trim().starts_with("timezone="))
+                    .and_then(|s| s.split('=').nth(1))
+            })
         })
         .map(|s| s.to_string())
         .unwrap_or_else(|| "UTC".to_string()); // Final fallback

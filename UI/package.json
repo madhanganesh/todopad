@@ -7,7 +7,7 @@
     "assets": "../static"
   },
   "scripts": {
-    "clean": "rm -rf  $npm_package_config_assets && mkdir -p  $npm_package_config_assets/js  $npm_package_config_assets/css  $npm_package_config_assets/fonts  $npm_package_config_assets/fontawesome",
+    "clean": "rm -rf  $npm_package_config_assets && mkdir -p  $npm_package_config_assets/js  $npm_package_config_assets/css  $npm_package_config_assets/fonts  $npm_package_config_assets/fontawesome $npm_package_config_assets/images",
 
     "build:css": "npx tailwindcss -i ./tailwind.css -o $npm_package_config_assets/css/tailwind.css --minify",
     "watch:css": "npx tailwindcss -i ./tailwind.css -o $npm_package_config_assets/css/tailwind.css --minify --watch",
@@ -18,7 +18,11 @@
     "build:fa": "mkdir -p $npm_package_config_assets/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/css $npm_package_config_assets/fontawesome && cp -r node_modules/@fortawesome/fontawesome-free/webfonts $npm_package_config_assets/fontawesome",
     "build:fonts": "mkdir -p $npm_package_config_assets/fonts && cp -r fonts $npm_package_config_assets/",
 
-    "build": "npm run clean && cp favicon.ico $npm_package_config_assets/ && npm run build:css && npm run build:js && npm run build:fonts && npm run build:fa",
+    "build:images": "mkdir -p $npm_package_config_assets/images && cp -r images $npm_package_config_assets/",
+    "build:pages": "mkdir -p $npm_package_config_assets/pages && cp -r pages $npm_package_config_assets/",
+
+
+    "build": "npm run clean && cp favicon.ico $npm_package_config_assets/ && npm run build:css && npm run build:js && npm run build:fonts && npm run build:images && npm run build:fa && npm run build:pages",
 
     "watch": "npm run watch:css & npm run watch:js"
   },

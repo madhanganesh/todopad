@@ -1,16 +1,18 @@
-use std::sync::Arc;
 use askama::Template;
 use axum::{
-    extract::State, http::HeaderMap, response::{IntoResponse, Response}, Extension
+    Extension,
+    extract::State,
+    http::HeaderMap,
+    response::{IntoResponse, Response},
 };
+use std::sync::Arc;
 
 use sqlx::SqlitePool;
 use tower_sessions::Session;
 
-use super::{AboutTemplate, BaseTemplate, HtmlTemplate};
 use super::auth::validate_cookie;
+use super::{AboutTemplate, BaseTemplate, HtmlTemplate};
 use crate::{handlers::get_todos_and_show_date, models::Todo};
-
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -24,18 +26,17 @@ struct IndexTemplate {
 
 pub async fn index(
     session: Session,
-    headers: HeaderMap, 
+    headers: HeaderMap,
     State(pool): State<Arc<SqlitePool>>,
     Extension(timezone): Extension<String>,
 ) -> Response {
-
-    let filter: String = session.get("filter").await.unwrap().unwrap_or("pending".to_string());
+    let filter: String = session
+        .get("filter")
+        .await
+        .unwrap()
+        .unwrap_or("pending".to_string());
     if let Ok(user_id) = validate_cookie(&headers).await {
-        let (todos, show_date) = get_todos_and_show_date(
-            &filter, 
-            &pool, 
-            user_id, 
-            &timezone).await;
+        let (todos, show_date) = get_todos_and_show_date(&filter, &pool, user_id, &timezone).await;
 
         let template = IndexTemplate {
             base: BaseTemplate::new(headers).await,

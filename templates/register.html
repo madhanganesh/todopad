@@ -1,57 +1,64 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="h-screen flex items-center justify-center">
+<div class="min-h-screen flex items-center justify-center px-4">
 
-    <!-- Registration Form -->
-    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+  <!-- Registration Form Card -->
+  <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
     {% if let Some(error) = error %}
     <div class="bg-red-100 text-red-700 p-3 rounded mb-4" id="error-message">
         {{ error }}
     </div>
     {% endif %}
 
-        <h1 class="text-2xl font-bold text-gray-800 mb-4">Register</h1>
-        
-        <form action="/register" method="post" class="space-y-4">
-            <!-- Email Field -->
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    class="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your email"
-                >
-            </div>
-            
-            <!-- Password Field -->
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    class="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your password"
-                >
-            </div>
-            
-            <!-- Submit Button -->
-            <button
-                type="submit"
-                class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-                Register
-            </button>
-        </form>
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Register</h1>
+    
+    <form action="/register" method="post" class="space-y-4">
+      <!-- Email Field -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          class="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter your email"
+        >
+      </div>
 
-        <!-- Dynamic Message Container -->
-        <div id="message" class="mt-4"></div>
-    </div>
+      <!-- Password Field -->
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          class="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter your password"
+        >
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        Register
+      </button>
+    </form>
+
+    <!-- Already have an account -->
+    <p class="text-lg text-center text-gray-500 mt-4">
+      Already have an account? 
+      <a href="/login" class="text-blue-500 hover:underline">Login</a>.
+    </p>
+
+
+    <!-- Dynamic Message Container -->
+    <div id="message" class="mt-4"></div>
+  </div>
 
 </div>
 {% endblock %}

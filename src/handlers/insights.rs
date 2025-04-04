@@ -1,24 +1,23 @@
-use std::{collections::HashMap, sync::Arc};
 use askama::Template;
-use sqlx::SqlitePool;
-use serde::{Deserialize, Serialize};
 use axum::{
-    Json,
-    Extension,
-    Form,
-    extract::{Path, State, Query}, 
+    Extension, Form, Json,
+    extract::{Path, Query, State},
     http::{HeaderMap, StatusCode},
-    response::{Html, IntoResponse, Response}
+    response::{Html, IntoResponse, Response},
 };
+use serde::{Deserialize, Serialize};
+use sqlx::SqlitePool;
+use std::{collections::HashMap, sync::Arc};
 
-use crate::{
-    models::Insight, 
-    repo::insigts::{
-        create_insight, delete_insight, get_efforts, get_efforts_by_tags, get_insight, get_insights, update_insight
-    }
-};
 use super::CurrentUser;
 use super::{BaseTemplate, HtmlTemplate};
+use crate::{
+    models::Insight,
+    repo::insigts::{
+        create_insight, delete_insight, get_efforts, get_efforts_by_tags, get_insight,
+        get_insights, update_insight,
+    },
+};
 
 #[derive(Template)]
 #[template(path = "insights.html")]
@@ -29,23 +28,22 @@ struct InsightsTemplate {
 }
 
 pub async fn insights_page(
-    id: Option<Path<i64>>, 
+    id: Option<Path<i64>>,
     headers: HeaderMap,
     Extension(user): Extension<CurrentUser>,
     State(pool): State<Arc<SqlitePool>>,
 ) -> Response {
-    
     let select_id = if let Some(Path(id)) = id {
-        Some(id) 
+        Some(id)
     } else {
-        None 
-    }; 
+        None
+    };
 
     let insights = match get_insights(&pool, user.user_id).await {
         Ok(insights) => insights,
         Err(err) => {
             eprintln!("Error from get_insights. {:?}", err);
-            return  Html("<p>Error in getting insights. Please contact admin</p>".to_string())
+            return Html("<p>Error in getting insights. Please contact admin</p>".to_string())
                 .into_response();
         }
     };
@@ -59,10 +57,9 @@ pub async fn insights_page(
     HtmlTemplate(template).into_response()
 }
 
-
 #[derive(Deserialize)]
 pub struct EffortQuery {
-    pub period: String, 
+    pub period: String,
 }
 
 #[derive(Serialize)]
@@ -78,7 +75,6 @@ pub async fn get_insight_data(
     State(pool): State<Arc<SqlitePool>>,
     Path(id): Path<i64>,
 ) -> Json<InsightData> {
-
     let default_chart_type = "line".to_string();
     let mut labels = Vec::new();
     let mut data_sets: HashMap<String, Vec<f64>> = HashMap::new();
@@ -87,7 +83,11 @@ pub async fn get_insight_data(
         Ok(insight) => insight,
         Err(err) => {
             eprintln!("Error from get_insight. {:?}", err);
-            return Json(InsightData { chart_type: default_chart_type, labels, data_sets });
+            return Json(InsightData {
+                chart_type: default_chart_type,
+                labels,
+                data_sets,
+            });
         }
     };
 
@@ -99,7 +99,7 @@ pub async fn get_insight_data(
     let period = params.period.as_str();
     if insight.metric == "effort" {
         let result = if tags.is_empty() {
-             get_efforts(&pool, user.user_id, period).await
+            get_efforts(&pool, user.user_id, period).await
         } else {
             get_efforts_by_tags(&pool, user.user_id, period, &tags).await
         };
@@ -110,14 +110,24 @@ pub async fn get_insight_data(
                 data_sets = values.1;
             }
             Err(err) => {
-                eprintln!("Error: unable to get data values for insight: {}. {:?}", insight.name, err);
+                eprintln!(
+                    "Error: unable to get data values for insight: {}. {:?}",
+                    insight.name, err
+                );
             }
         }
     } else {
-        eprintln!("Error: Unknown metric {} for insight: {}", insight.metric, insight.name);
+        eprintln!(
+            "Error: Unknown metric {} for insight: {}",
+            insight.metric, insight.name
+        );
     }
-    
-    Json(InsightData { chart_type: insight.chart_type, labels, data_sets })
+
+    Json(InsightData {
+        chart_type: insight.chart_type,
+        labels,
+        data_sets,
+    })
 }
 
 #[derive(Template)]
@@ -136,13 +146,10 @@ pub struct InsightForm {
     pub description: Option<String>,
     pub metric: String,
     pub chart_type: String,
-    pub tags: Option<String>, 
+    pub tags: Option<String>,
 }
 
-pub async fn new_insight(
-    headers: HeaderMap,
-) -> Response {
-
+pub async fn new_insight(headers: HeaderMap) -> Response {
     let insight = InsightForm {
         id: None,
         name: String::new(),
@@ -152,9 +159,9 @@ pub async fn new_insight(
         tags: None,
     };
 
-    let template = InsightFormTemplate { 
+    let template = InsightFormTemplate {
         base: BaseTemplate::new(headers).await,
-        insight, 
+        insight,
         is_edit: false,
         error: None,
     };
@@ -168,30 +175,29 @@ pub async fn edit_insight(
     State(pool): State<Arc<SqlitePool>>,
     Path(insight_id): Path<i64>,
 ) -> Response {
-
     let insight = match get_insight(&pool, user.user_id, insight_id).await {
         Ok(insight) => insight,
         Err(err) => {
             eprintln!("Error in getting insight for ID {}. {:?}", insight_id, err);
             return Response::builder()
-                    .status(StatusCode::NOT_FOUND)
-                    .body("Insight not found".into())
-                    .unwrap();
+                .status(StatusCode::NOT_FOUND)
+                .body("Insight not found".into())
+                .unwrap();
         }
     };
 
-    let insight = InsightForm { 
-        id: Some(insight.id), 
-        name: insight.name, 
-        description: insight.description, 
-        metric: insight.metric, 
-        chart_type: insight.chart_type, 
+    let insight = InsightForm {
+        id: Some(insight.id),
+        name: insight.name,
+        description: insight.description,
+        metric: insight.metric,
+        chart_type: insight.chart_type,
         tags: insight.tags,
     };
 
-    let template = InsightFormTemplate { 
+    let template = InsightFormTemplate {
         base: BaseTemplate::new(headers).await,
-        insight, 
+        insight,
         is_edit: true,
         error: None,
     };
@@ -205,7 +211,6 @@ pub async fn save_insight(
     State(pool): State<Arc<SqlitePool>>,
     Form(form): Form<InsightForm>,
 ) -> Response {
-
     let copy = form.clone();
 
     let insight = Insight {
@@ -221,26 +226,29 @@ pub async fn save_insight(
 
     let result = match copy.id {
         Some(_) => update_insight(&pool, &insight).await,
-        None => create_insight(&pool, &insight).await
+        None => create_insight(&pool, &insight).await,
     };
 
-     let insight = match result {
+    let insight = match result {
         Ok(insight) => insight,
         Err(err) => {
-             let s = &err.to_string();
-             eprintln!("Error from create_insight. {:?}", s);
-             let template = InsightFormTemplate { 
-                 base: BaseTemplate::new(headers).await,
-                 insight: form, 
-                 is_edit: false,
-                 error: Some(s.to_string()),
-             };
+            let s = &err.to_string();
+            eprintln!("Error from create_insight. {:?}", s);
+            let template = InsightFormTemplate {
+                base: BaseTemplate::new(headers).await,
+                insight: form,
+                is_edit: false,
+                error: Some(s.to_string()),
+            };
 
-             return HtmlTemplate(template).into_response()
+            return HtmlTemplate(template).into_response();
         }
     };
 
-    let path = format!(r#"<script>window.location.href='/insights/{}';</script>"#, insight.id);
+    let path = format!(
+        r#"<script>window.location.href='/insights/{}';</script>"#,
+        insight.id
+    );
     Html(path).into_response()
 }
 
@@ -257,4 +265,3 @@ pub async fn delete_insight_h(
     let redirect_script = r#"<script>window.location.href='/insights';</script>"#;
     Html(redirect_script).into_response()
 }
-

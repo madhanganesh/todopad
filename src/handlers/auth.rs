@@ -1,12 +1,7 @@
-use axum::{
-    http::StatusCode,
-    response::Response,
-    middleware::Next,
-    extract::Request,
-};
-use headers::{HeaderMapExt, Cookie};
+use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
+use headers::{Cookie, HeaderMapExt};
 use hyper::HeaderMap;
-use jsonwebtoken::{decode, DecodingKey, Validation, TokenData};
+use jsonwebtoken::{DecodingKey, TokenData, Validation, decode};
 
 use super::{Claims, SECRET};
 
@@ -16,13 +11,18 @@ pub async fn auth_middleware(mut req: Request, next: Next) -> Result<Response, S
         return Ok(next.run(req).await);
     }*/
 
-
     let headers: &HeaderMap = req.headers();
     if let Some(cookie) = headers.typed_get::<Cookie>() {
         if let Some(token) = cookie.get("auth_token") {
-            let token_data = decode::<Claims>(token, &DecodingKey::from_secret(SECRET), &Validation::default());
+            let token_data = decode::<Claims>(
+                token,
+                &DecodingKey::from_secret(SECRET),
+                &Validation::default(),
+            );
             if let Ok(TokenData { claims, .. }) = token_data {
-                req.extensions_mut().insert(super::CurrentUser { user_id: claims.sub });
+                req.extensions_mut().insert(super::CurrentUser {
+                    user_id: claims.sub,
+                });
                 return Ok(next.run(req).await);
             }
         }
@@ -32,12 +32,16 @@ pub async fn auth_middleware(mut req: Request, next: Next) -> Result<Response, S
 }
 
 pub async fn validate_cookie(headers: &HeaderMap) -> Result<i64, StatusCode> {
-//pub async fn validate_cookie(req: &Request) -> Result<String, StatusCode> {
+    //pub async fn validate_cookie(req: &Request) -> Result<String, StatusCode> {
     //let headers: &HeaderMap = req.headers();
 
     if let Some(cookie) = headers.typed_get::<Cookie>() {
         if let Some(token) = cookie.get("auth_token") {
-            let token_data = decode::<Claims>(token, &DecodingKey::from_secret(SECRET), &Validation::default());
+            let token_data = decode::<Claims>(
+                token,
+                &DecodingKey::from_secret(SECRET),
+                &Validation::default(),
+            );
             if let Ok(TokenData { claims, .. }) = token_data {
                 return Ok(claims.sub);
             }
