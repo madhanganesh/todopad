@@ -1,80 +1,86 @@
-cargo install sqlx-cli
-export DATABASE_URL=sqlite://todo.db
-sqlx database create
-sqlx migrate run
+# 📝 todopad
 
-echo "~/.cargo/bin/cargo sqlx prepare 2>&1 >/dev/null; git add .sqlx" > .git/hooks/pre-commit
+**todopad** is a clean and focused task management app that helps you capture, track, and complete the todos you intend to finish.
 
-flyctl secrets set ENV=release DATABASE_URL=sqlite:///data/todopad.db SQLX_OFFLINE=true RUST_LOG=debug GEMINI_API_KEY=AIzaSyBMREWluJ1x7m5IaHSXL_2AKXEORknO8bY
+It is built with **Rust** on the backend (Axum) and **HTMX** on the frontend for a fast, server-driven UI.
 
-flyctl secrets set DATABASE_URL=sqlite://todopad.db SQLX_OFFLINE=true RUST_LOG=debug GEMINI_API_KEY=AIzaSyBMREWluJ1x7m5IaHSXL_2AKXEORknO8bY
+---
 
+## ✨ Features
 
-# Connect SQLite DB in fly.io
-flyctl ssh console
-apt-get update && apt-get install -y sqlite3
+- ✅ Simple and intuitive interface to manage your todos  
+- 🧠 Automatically generates **AI-powered tags** from todo text  
+- 📊 Visualize **insights** based on tags (e.g., time spent on Project A vs B)  
+- ⚡ Quickly act on todos — mark complete, reschedule, adjust effort  
+- 📱 Fully mobile-compatible design  
 
+> 🔍 [Explore the app with screenshots & demo](https://www.todopad.in/static/pages/explore.html)
+
+---
+
+## 🚀 How to Run Locally
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/madhanganesh/todopad.git
+cd todopad
+```
+
+### 2. Create a .env file with the following:
+```bash
+ENV=development
+DATABASE_URL=sqlite://todopad.db
+SQLX_OFFLINE=false
+RUST_LOG=debug
+OPENAI_API_KEY=<your_openai_key>
+```
+
+### 3. In a seperate terminal build UI assets
+```bash
+cd UI
+npm i
+npm run build
+```
+there is also `npm run watch` if you want to watch for changes and build
+
+### 4. Start the backend server
+```bash
+cargo run
+```
+
+---
+
+## 🐳 Run with Docker
+```bash
 docker build -t todopad .
+docker run --name todopad \
+  -e ENV=release \
+  -e DATABASE_URL=sqlite://todopad.db \
+  -e SQLX_OFFLINE=true \
+  -e RUST_LOG=error \
+  -e OPENAI_API_KEY=<your_openai_key> \
+  -p 8080:8080 todopad
+```
 
-docker run --name todopad -e ENV=release -e DATABASE_URL=sqlite://todopad.db -e SQLX_OFFLINE=true -e RUST_LOG=error -e OPENAI_API_KEY=<key> -p 8080:8080 todopad
+---
 
+## 🌍 Deployment
 
---env-file .env
+The app is deployed on Fly.io and is live at:
 
-fly ssh console -a todopad  
+👉 https://www.todopad.in
 
-test
+---
 
+## 📄 License
 
-TODO:
-0. Edit Insight [Done]
-    Delete Insight [Done]
-    After insight creation navigate to that insight [Done]
-    When adding tags 
-    a. message to press enter [Done]
-    b. selection of existing tags by arrows keys and enter [Done]
-    c. autocompletion tags pop-up position [Done]
-    c. adjust the chart in mobile [Done]
+MIT License
 
+---
 
-bugs
-====
-[Done] Bar Chart and Pie Graps are coming wrong
-[Done] On completipn should not remove other than Pending
+## 💬 Feedback
 
-1. when editing the title the tags are not regenerated. but when implementing this, need to careful
-that if user has given any tags explicitly - then no need to regenarate the tags again
-[ Done ]]
+For feedback, ideas, or bugs, feel free to reach out:
 
-2. Show data (relative day) in the list
-[Done]
-
-3. Parse any link in the notes and show links and open from todo item [Done] 
-
-4. Click on link icon is confusing esp i there is only one link
-
-5. [Done] Run google page insights - and fix the perf issues
-
-6. [Done] Timezone issues... if I create in US, singapore date is used
-
-7. [Open] add UI build also to Docker
-
-7. Secret key is hard coded - handlers/mod.rs
-
-8. WARN call:get_record: tower_sessions_core::session: possibly suspicious activity: record not found in store
-
-9. Color code on due dates that are passed
-
-10. logging with error (and alerts)
-
-11. Charts
-    a. count metric in charts
-    b. Show description of insight
-
-12. Refactor edit HTML
-
-13. [Done] move JS to files and minify
-
-14. Further speed improvement (googl epage insights)
-
+📧 madhanganesh@gmail.com
 
