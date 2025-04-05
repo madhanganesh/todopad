@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="text-center mt-4 mb-8">
+<section class="text-center mt-4 mb-2">
   <p class="text-lg text-gray-700 mt-2">
     Meet <strong>todopad</strong> — your focused productivity companion built to capture, organize, and complete your tasks. With AI-assisted tagging and simple workflows, staying on top of your to-dos has never been easier.
   </p>
@@ -57,14 +57,22 @@
   </div>
 </section>
 
-<section class="mt-3 text-center">
+<!-- Open Source Note -->
+<div class="text-center text-sm text-gray-700 mb-3">
+  todopad is <strong>open source</strong>. View the code on 
+  <a href="https://github.com/madhanganesh/todopad" target="_blank" class="text-blue-600 hover:underline">
+  <i class="fa-brands fa-github text-lg text-gray-800 mr-1"></i>
+  </a>
+</div>
+
+<section class="mt-2 text-center">
   <a href="/static/pages/explore.html"
      class="inline-block bg-purple-600 text-white text-base font-medium px-6 py-3 rounded-md shadow hover:bg-purple-700 transition">
     Take the Tour →
   </a>
 </section>
 
-<footer class="mt-16 text-center text-sm text-gray-500">
+<footer class="mt-10 text-center text-sm text-gray-500">
   Have feedback or suggestions? Reach out at
   <a href="mailto:madhanganesh@gmail.com" class="text-blue-600 hover:underline">
     madhanganesh@gmail.com
